@@ -27,10 +27,13 @@ jobs:
       - name: 5. Instalar Flet
         run: pip install flet
 
-      - name: 6. Fabricar la aplicacion Android
+      - name: 6. Armar equipaje limpio
+        run: echo "fpdf" > requirements.txt
+
+      - name: 7. Fabricar la aplicacion Android
         run: yes | flet build apk
 
-      - name: 7. Entregar el APK terminado
+      - name: 8. Entregar el APK terminado
         uses: actions/upload-artifact@v4
         with:
           name: XIOMI_App_Instalador
