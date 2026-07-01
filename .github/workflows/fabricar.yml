@@ -1,0 +1,52 @@
+name: Fabricar APK de XIOMI
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Leer mis archivos
+        uses: actions/checkout@v4
+
+      - name: 2. Preparar el entorno Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 3. Instalar herramientas
+        run: pip install flet
+
+      - name: 4. Ensamblar la aplicacion Android
+        run: flet build apk
+
+      - name: 5. Entregar el APK terminado
+        uses: actions/upload-artifact@v4
+        with:
+          name: XIOMI_App_Instalador
+          path: build/apk/**/*.apk
+name: Fabricar APK de XIOMI
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Leer mis archivos
+        uses: actions/checkout@v4
+
+      - name: 2. Preparar el entorno Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 3. Instalar herramientas
+        run: pip install flet
+
+      - name: 4. Ensamblar la aplicacion Android
+        run: flet build apk
+
+      - name: 5. Entregar el APK terminado
+        uses: actions/upload-artifact@v4
+        with:
+          name: XIOMI_App_Instalador
+          path: build/apk/**/*.apk
