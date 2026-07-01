@@ -28,7 +28,7 @@ jobs:
         run: pip install flet
 
       - name: 6. Fabricar la aplicacion Android
-        run: flet build apk
+        run: yes | flet build apk
 
       - name: 7. Entregar el APK terminado
         uses: actions/upload-artifact@v4
