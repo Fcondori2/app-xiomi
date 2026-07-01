@@ -27,8 +27,8 @@ jobs:
       - name: 5. Instalar Flet
         run: pip install flet
 
-      - name: 6. Armar equipaje limpio
-        run: echo "fpdf" > requirements.txt
+      - name: 6. Armar equipaje moderno
+        run: echo "fpdf2" > requirements.txt
 
       - name: 7. Fabricar la aplicacion Android
         run: yes | flet build apk
