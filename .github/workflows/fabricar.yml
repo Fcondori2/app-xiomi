@@ -8,44 +8,29 @@ jobs:
       - name: 1. Leer mis archivos
         uses: actions/checkout@v4
 
-      - name: 2. Preparar el entorno Python
+      - name: 2. Preparar Java 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: 3. Preparar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: 4. Preparar entorno Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: 3. Instalar herramientas
+      - name: 5. Instalar Flet
         run: pip install flet
 
-      - name: 4. Ensamblar la aplicacion Android
+      - name: 6. Fabricar la aplicacion Android
         run: flet build apk
 
-      - name: 5. Entregar el APK terminado
-        uses: actions/upload-artifact@v4
-        with:
-          name: XIOMI_App_Instalador
-          path: build/apk/**/*.apk
-name: Fabricar APK de XIOMI
-on: [push, workflow_dispatch]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: 1. Leer mis archivos
-        uses: actions/checkout@v4
-
-      - name: 2. Preparar el entorno Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: 3. Instalar herramientas
-        run: pip install flet
-
-      - name: 4. Ensamblar la aplicacion Android
-        run: flet build apk
-
-      - name: 5. Entregar el APK terminado
+      - name: 7. Entregar el APK terminado
         uses: actions/upload-artifact@v4
         with:
           name: XIOMI_App_Instalador
