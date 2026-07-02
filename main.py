@@ -563,6 +563,10 @@ def main(page: ft.Page):
         page.update()
 
     page.on_route_change = cambiar_pantalla
-    page.go("/")
+            
+    # --- EL EMPUJÓN FINAL ---
+    page.route = "/"          # Le confirmamos la ruta a mano
+    cambiar_pantalla(None)    # ¡Obligamos a que se ejecute y dibuje tu menú principal!
 
 ft.app(target=main)
+
