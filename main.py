@@ -33,13 +33,13 @@ def inicializar_base_datos():
                       )''')
     # Crear tabla Detalle_Factura si no existe
     cursor.execute('''CREATE TABLE IF NOT EXISTS Detalle_Factura (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        numero_factura INTEGER,
-                        codigo_articulo TEXT,
-                        precio_unitario REAL,
-                        unidades INTEGER,
-                        total_linea...''') # Nota: El código real de creación está simplificado abajo de forma segura
-    
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        numero_factura INTEGER,
+        codigo_articulo TEXT,
+        precio_unitario REAL,
+        unidades INTEGER,
+        total_linea REAL
+    )''')
     # Inyectamos un cliente por defecto si la tabla está vacía para que la app no arranque en blanco
     cursor.execute("SELECT COUNT(*) FROM Clientes")
     if cursor.fetchone()[0] == 0:
