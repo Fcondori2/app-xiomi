@@ -319,7 +319,7 @@ def main(page: ft.Page):
     page.add(ft.Text("¡El motor de XIOMI funciona perfecto!", size=25, color="blue"))
     page.update()
         # Memoria de control para saber qué reporte disparó el guardado del celular
-        operacion_actual = {}
+    operacion_actual = {}
     
         # El selector de archivos inteligente nativo para Android
     def al_elegir_ruta_guardado(e: ft.FilePickerResultEvent):
