@@ -316,8 +316,8 @@ def main(page: ft.Page):
         return  # Frenamos la app acá para que puedas leer el error en tu pantalla
     # ---------------------------------------------------------
 
-    carrito = {}
-    
+   carrito = {}
+        page.add(ft.Text("¡El motor de XIOMI funciona perfecto!", size=25, color="blue"))
     # Memoria de control para saber qué reporte disparó el guardado del celular
     operacion_actual = {}
     
