@@ -316,9 +316,16 @@ def main(page: ft.Page):
         return # Frenamos la app aca para que puedas leer el error en tu pantalla
 
     carrito = {}
-    page.add(ft.Text("¡El motor de XIOMI funciona perfecto!", size=25, color="blue"))
-    page.update()
-        # Memoria de control para saber qué reporte disparó el guardado del celular
+
+    # --- Trampa para atrapar errores ocultos en los botones ---
+    def atrapar_error_interfaz(e):
+        page.add(ft.Text(f"ERROR EN PANTALLA: {e.data}", color="red", size=20, weight="bold"))
+        page.update()
+    
+    page.on_error = atrapar_error_interfaz
+    # ----------------------------------------------------------
+
+    # Memoria de control para saber que reporte disparo el guardado del celular
     operacion_actual = {}
     
         # El selector de archivos inteligente nativo para Android
