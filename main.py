@@ -562,11 +562,15 @@ def main(page: ft.Page):
 
         page.update()
 
-    page.on_route_change = cambiar_pantalla
-            
-    # --- EL EMPUJÓN FINAL ---
-    page.route = "/"          # Le confirmamos la ruta a mano
-    cambiar_pantalla(None)    # ¡Obligamos a que se ejecute y dibuje tu menú principal!
+        page.on_route_change = cambiar_pantalla
+    page.route = "/"
+    
+    # --- EL CAZABICHOS DEFINITIVO ---
+    try:
+        cambiar_pantalla(None)
+    except Exception as e:
+        page.views.append(ft.View("/", [ft.Text(f"¡TE ATRAPÉ!: {e}", color="red", size=25, weight="bold")]))
+        page.update()
 
 ft.app(target=main)
 
