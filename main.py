@@ -309,19 +309,19 @@ def main(page: ft.Page):
     # --- RED DE SEGURIDAD PARA ATRAPAR EL ERROR EN ANDROID ---
     try:
         inicializar_base_datos()
-    except Exception as e:
-        error_msj = f"ERROR AL ARRANCAR:\n{e}\n\n{traceback.format_exc()}"
-        page.add(ft.Text(error_msj, color="red", size=14, weight="bold"))
-        page.update()
-        return  # Frenamos la app acá para que puedas leer el error en tu pantalla
-    # ---------------------------------------------------------
-
-   carrito = {}
+   except Exception as e:
+            error_msj = f"ERROR AL ARRANCAR:\n{e}\n\n{traceback.format_exc()}"
+            page.add(ft.Text(error_msj, color="red", size=14, weight="bold"))
+            page.update()
+            return # Frenamos la app aca para que puedas leer el error en tu pantalla
+        
+        carrito = {}
         page.add(ft.Text("¡El motor de XIOMI funciona perfecto!", size=25, color="blue"))
-    # Memoria de control para saber qué reporte disparó el guardado del celular
-    operacion_actual = {}
+        page.update()
+        # Memoria de control para saber qué reporte disparó el guardado del celular
+        operacion_actual = {}
     
-    # El selector de archivos inteligente nativo para Android
+        # El selector de archivos inteligente nativo para Android
     def al_elegir_ruta_guardado(e: ft.FilePickerResultEvent):
         if e.path:
             op = operacion_actual.get("tipo")
