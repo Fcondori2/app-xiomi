@@ -560,7 +560,7 @@ def main(page: ft.Page):
 
             page.views.append(ft.View("/reportes", [ft.AppBar(title=ft.Text("Facturación y Reportes"), bgcolor=ft.colors.AMBER_800, color=ft.colors.WHITE, leading=ft.IconButton(ft.icons.ARROW_BACK, icon_color=ft.colors.WHITE, on_click=lambda _: page.go("/"))), ft.Container(height=10), tarjeta_facturas, ft.Container(height=10), tarjeta_reporte_dia, ft.Container(height=10), tarjeta_reporte_consolidado], padding=20, scroll=ft.ScrollMode.AUTO))
 
-                        page.update()
+            page.update()
 
     # --- EL ENRUTADOR SEGURO ---
     def enrutador_seguro(e):
