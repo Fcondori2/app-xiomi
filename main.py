@@ -558,11 +558,13 @@ def main(page: ft.Page):
             tarjeta_reporte_dia = ft.Card(content=ft.Container(padding=20, content=ft.Column([ft.Text("Resumen Diario de Armado", weight=ft.FontWeight.BOLD), input_fecha_reporte, ft.ElevatedButton("Generar Reporte del Día", icon=ft.icons.FORMAT_LIST_BULLETED, on_click=click_reporte_diario, bgcolor=ft.colors.AMBER_800, color=ft.colors.WHITE, width=float("inf"))])))
             tarjeta_reporte_consolidado = ft.Card(content=ft.Container(padding=20, content=ft.Column([ft.Text("Reporte Consolidado por Período", weight=ft.FontWeight.BOLD), ft.Row([input_fecha_inicio, input_fecha_fin]), ft.ElevatedButton("Generar Consolidado", icon=ft.icons.ANALYTICS, on_click=click_consolidado_periodo, bgcolor=ft.colors.TEAL_700, color=ft.colors.WHITE, width=float("inf"))])))
 
-            page.views.append(ft.View("/reportes", [ft.AppBar(title=ft.Text("Facturación y Reportes"), bgcolor=ft.colors.AMBER_800, color=ft.colors.WHITE, leading=ft.IconButton(ft.icons.ARROW_BACK, icon_color=ft.colors.WHITE, on_click=lambda _: page.go("/"))), ft.Container(height=10), tarjeta_facturas, ft.Container(height=10), tarjeta_reporte_dia, ft.Container(height=10), tarjeta_reporte_consolidado], padding=20, scroll=ft.ScrollMode.AUTO))
+                            # Escalón de arriba (adentro de la vista de reportes)
+            page.views.append(ft.View("/reportes", [ft.AppBar...
 
+        # Escalón del medio (¡ESTE ES EL LUGAR CORRECTO PARA PINTAR TODAS LAS PANTALLAS!)
         page.update()
 
-    # --- EL ENRUTADOR SEGURO ---
+    # Escalón de abajo
     def enrutador_seguro(e):
         try:
             cambiar_pantalla(e)
