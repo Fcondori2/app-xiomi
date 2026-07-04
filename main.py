@@ -14,7 +14,7 @@ def inicializar_base_datos():
     # Crear tabla Clientes si no existe
     cursor.execute('''CREATE TABLE IF NOT EXISTS Clientes (
                         numero_cliente INTEGER PRIMARY KEY AUTOINCREMENT,
-                        nombre_apellido TEXT NOT NULL,
+                        nombre_apellido TEXT NOT NULL.
                         direccion_entrega TEXT
                       )''')
     # Crear tabla Productos si no existe
