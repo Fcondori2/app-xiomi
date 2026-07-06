@@ -1,127 +1,50 @@
 import flet as ft
 import traceback
 import os
+import sqlite3
+from fpdf import FPDF
+from datetime import date
 
 # ==========================================
-# 1. MOTOR DE REPORTES PDF 
+# 1. HERRAMIENTAS DE BASE DE DATOS Y RUTAS
 # ==========================================
+def get_ruta_db():
+    # Calcula la ruta segura del celular en el momento exacto que se necesita
+    return os.path.join(os.environ.get("FLET_APP_STORAGE_DATA", "."), "sistema_ventas.db")
+
+def db(query, parametros=(), fetch=False, fetchall=False):
+    conexion = sqlite3.connect(get_ruta_db())
+    cursor = conexion.cursor()
+    cursor.execute(query, parametros)
+    if fetch:
+        res = cursor.fetchall() if fetchall else cursor.fetchone()
+        conexion.close()
+        return res
+    conexion.commit()
+    conexion.close()
+
+def inicializar_base_datos():
+    db('''CREATE TABLE IF NOT EXISTS Clientes (numero_cliente INTEGER PRIMARY KEY AUTOINCREMENT, nombre_apellido TEXT NOT NULL, direccion_entrega TEXT)''')
+    db('''CREATE TABLE IF NOT EXISTS Productos (codigo_articulo TEXT PRIMARY KEY, nombre_articulo TEXT NOT NULL, precio_unitario REAL NOT NULL)''')
+    db('''CREATE TABLE IF NOT EXISTS Facturas (numero_factura INTEGER PRIMARY KEY AUTOINCREMENT, fecha TEXT NOT NULL, numero_cliente INTEGER, total_a_pagar REAL NOT NULL, FOREIGN KEY(numero_cliente) REFERENCES Clientes(numero_cliente))''')
+    db('''CREATE TABLE IF NOT EXISTS Detalle_Factura (id INTEGER PRIMARY KEY AUTOINCREMENT, numero_factura INTEGER, codigo_articulo TEXT, precio_unitario REAL, unidades INTEGER, total_linea REAL)''')
+    if db("SELECT COUNT(*) FROM Clientes", fetch=True)[0] == 0:
+        db("INSERT INTO Clientes (nombre_apellido, direccion_entrega) VALUES ('CONSUMIDOR FINAL', 'PERICO')")
+
 def formato_ars(numero): 
     return f"{numero:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-
-def generar_pdf_facturas(ruta_db, ruta_destino, num_factura=None, fecha_consulta=None):
-    import sqlite3
-    from fpdf import FPDF
-    conexion = sqlite3.connect(ruta_db)
-    cursor = conexion.cursor()
-    if num_factura:
-        facturas = cursor.execute("SELECT numero_factura FROM Facturas WHERE numero_factura = ?", (num_factura,)).fetchall()
-    elif fecha_consulta:
-        facturas = cursor.execute("SELECT numero_factura FROM Facturas WHERE fecha = ?", (fecha_consulta,)).fetchall()
-    else: 
-        conexion.close()
-        return False
-    
-    if not facturas:
-        conexion.close()
-        return False
-        
-    pdf = FPDF()
-    for (f_id,) in facturas:
-        factura = cursor.execute('''SELECT f.numero_factura, f.fecha, c.nombre_apellido, c.direccion_entrega, f.total_a_pagar FROM Facturas f JOIN Clientes c ON f.numero_cliente = c.numero_cliente WHERE f.numero_factura = ?''', (f_id,)).fetchone()
-        lineas = cursor.execute('''SELECT p.nombre_articulo, d.unidades, d.precio_unitario, d.total_linea FROM Detalle_Factura d JOIN Productos p ON d.codigo_articulo = p.codigo_articulo WHERE d.numero_factura = ?''', (f_id,)).fetchall()
-        pdf.add_page()
-        pdf.set_xy(10, 15); pdf.set_text_color(50, 150, 255); pdf.set_font("Arial", 'B', 28); pdf.cell(90, 12, "XIOMI", ln=1)
-        pdf.set_font("Arial", '', 14); pdf.set_text_color(100, 100, 100); pdf.cell(90, 6, "Distribuidora", ln=1)
-        pdf.set_xy(110, 15); pdf.set_fill_color(173, 216, 230); pdf.set_text_color(0, 0, 0); pdf.set_font("Arial", 'B', 22)
-        pdf.cell(90, 12, "FACTURA", fill=True, ln=2, align='C')
-        pdf.set_fill_color(255, 255, 255); pdf.set_text_color(0, 0, 0); pdf.set_draw_color(255, 255, 255); pdf.set_font("Arial", 'B', 14)
-        pdf.cell(90, 10, f"Nro. {factura[0]}", border=1, fill=True, ln=2, align='C')
-        pdf.set_draw_color(0, 0, 0); pdf.set_font("Arial", '', 11); pdf.cell(90, 8, f"Fecha: {factura[1]}", ln=1, align='C')
-        pdf.ln(5)
-        pdf.set_xy(10, 42); pdf.set_font("Arial", 'B', 10); pdf.cell(20, 6, "Cliente:", ln=0); pdf.set_font("Arial", '', 10); pdf.cell(70, 6, f"{factura[2]}", ln=1)
-        pdf.set_font("Arial", 'B', 10); pdf.cell(20, 6, "Direccion:", ln=0); pdf.set_font("Arial", '', 10); pdf.cell(70, 6, f"{factura[3]}", ln=1)
-        pdf.ln(10)
-        pdf.set_fill_color(173, 216, 230); pdf.set_text_color(0, 0, 0); pdf.set_font("Arial", 'B', 10)
-        pdf.cell(95, 9, "Artículo", border=1, align='C', fill=True); pdf.cell(25, 9, "Cantidad", border=1, align='C', fill=True)
-        pdf.cell(35, 9, "Precio Unitario", border=1, align='C', fill=True); pdf.cell(35, 9, "Importe Total", border=1, ln=True, align='C', fill=True)
-        pdf.set_text_color(0, 0, 0); pdf.set_font("Arial", '', 10)
-        for art, cant, pre, tot in lineas:
-            pdf.cell(95, 8, art, border='LR', align='C'); pdf.cell(25, 8, str(cant), border='LR', align='C')
-            pdf.cell(35, 8, formato_ars(pre), border='LR', align='C'); pdf.cell(35, 8, formato_ars(tot), border='LR', ln=True, align='C')
-        for _ in range(max(0, 12 - len(lineas))):
-            pdf.cell(95, 8, "", border='LR', align='C'); pdf.cell(25, 8, "", border='LR', align='C'); pdf.cell(35, 8, "", border='LR', align='C'); pdf.cell(35, 8, "", border='LR', ln=True, align='C')
-        pdf.cell(190, 0, "", border='T', ln=True); pdf.ln(5)
-        y_final = pdf.get_y()
-        pdf.set_xy(110, y_final + 5); pdf.set_fill_color(240, 248, 255); pdf.set_font("Arial", 'B', 11)
-        pdf.cell(40, 10, "Importe Total", border=1, align='C', fill=True)
-        pdf.set_fill_color(255, 255, 255); pdf.cell(40, 10, f"$ {formato_ars(factura[4])}", border=1, ln=True, align='C', fill=True)
-        pdf.set_y(258); pdf.set_font("Arial", 'B', 10); pdf.set_text_color(50, 150, 255); pdf.cell(0, 5, "Gracias por confiar en nosotros", align='C', ln=True)
-        pdf.set_draw_color(150, 150, 150); pdf.line(10, 266, 200, 266)
-        pdf.set_y(268); pdf.set_font("Arial", '', 9); pdf.set_text_color(150, 150, 150); pdf.cell(0, 5, "XIOMI Distribuidora  |  Velez Sarsfield N°572, Perico-Jujuy  |  xiom.distribuidora@gmail.com", align='C', ln=True)
-    pdf.output(ruta_destino)
-    conexion.close()
-    return True
-
-def generar_reporte_generico(ruta_db, ruta_destino, query, parametros, titulo, subtitulo):
-    import sqlite3
-    from fpdf import FPDF
-    conexion = sqlite3.connect(ruta_db)
-    cursor = conexion.cursor()
-    productos = cursor.execute(query, parametros).fetchall()
-    conexion.close()
-    if not productos: return False
-    pdf = FPDF(); pdf.add_page()
-    pdf.set_text_color(50, 150, 255); pdf.set_font("Arial", 'B', 16); pdf.cell(190, 10, txt=titulo, ln=True, align='C')
-    pdf.set_text_color(100, 100, 100); pdf.set_font("Arial", size=11); pdf.cell(190, 8, txt=subtitulo, ln=True, align='C'); pdf.ln(10)
-    pdf.set_fill_color(173, 216, 230); pdf.set_text_color(0, 0, 0); pdf.set_font("Arial", 'B', 10)
-    for col, w in [("Codigo", 25), ("Descripcion", 65), ("Precio Unit.", 30), ("Total Unid.", 30)]: pdf.cell(w, 10, col, border=1, align='C', fill=True)
-    pdf.cell(40, 10, "Total", border=1, ln=True, align='C', fill=True)
-    pdf.set_text_color(0, 0, 0); pdf.set_font("Arial", size=10)
-    unidades_t, dinero_t = 0, 0
-    for cod, nom, pre, uni, tot in productos:
-        pdf.cell(25, 9, str(cod), border='LR', align='C'); pdf.cell(65, 9, str(nom), border='LR', align='C')
-        pdf.cell(30, 9, f"$ {formato_ars(pre)}", border='LR', align='C'); pdf.cell(30, 9, str(uni), border='LR', align='C')
-        pdf.cell(40, 9, f"$ {formato_ars(tot)}", border='LR', ln=True, align='C')
-        unidades_t += uni; dinero_t += tot
-    pdf.cell(190, 0, "", border='T', ln=True); pdf.ln(5)
-    pdf.set_font("Arial", 'B', 11); pdf.cell(120, 10, "TOTAL GENERAL:", border=1, align='R')
-    pdf.cell(30, 10, str(unidades_t), border=1, align='C'); pdf.cell(40, 10, f"$ {formato_ars(dinero_t)}", border=1, ln=True, align='C')
-    pdf.output(ruta_destino)
-    return True
 
 # ==========================================
 # 2. INTERFAZ GRÁFICA PROFESIONAL (FLET)
 # ==========================================
 def main(page: ft.Page):
     try:
-        # RESOLUCIÓN DE RUTA CONTABLE EN ENTORNO SEGURO MÓVIL
-        carpeta_segura = os.environ.get("FLET_APP_STORAGE_DATA", ".")
-        ruta_db = os.path.join(carpeta_segura, "sistema_ventas.db")
-
-        # FUNCIÓN DE CONEXIÓN RÁPIDA LOCAL
-        def db(query, parametros=(), fetch=False, fetchall=False):
-            conexion = sqlite3.connect(ruta_db)
-            cursor = conexion.cursor()
-            cursor.execute(query, parametros)
-            if fetch:
-                resultado = cursor.fetchall() if fetchall else cursor.fetchone()
-                conexion.close()
-                return resultado
-            conexion.commit()
-            conexion.close()
-
-        def inicializar_base_datos():
-            db('''CREATE TABLE IF NOT EXISTS Clientes (numero_cliente INTEGER PRIMARY KEY AUTOINCREMENT, nombre_apellido TEXT NOT NULL, direccion_entrega TEXT)''')
-            db('''CREATE TABLE IF NOT EXISTS Productos (codigo_articulo TEXT PRIMARY KEY, nombre_articulo TEXT NOT NULL, precio_unitario REAL NOT NULL)''')
-            db('''CREATE TABLE IF NOT EXISTS Facturas (numero_factura INTEGER PRIMARY KEY AUTOINCREMENT, fecha TEXT NOT NULL, numero_cliente INTEGER, total_a_pagar REAL NOT NULL, FOREIGN KEY(numero_cliente) REFERENCES Clientes(numero_cliente))''')
-            db('''CREATE TABLE IF NOT EXISTS Detalle_Factura (id INTEGER PRIMARY KEY AUTOINCREMENT, numero_factura INTEGER, codigo_articulo TEXT, precio_unitario REAL, unidades INTEGER, total_linea REAL)''')
-            if db("SELECT COUNT(*) FROM Clientes", fetch=True)[0] == 0:
-                db("INSERT INTO Clientes (nombre_apellido, direccion_entrega) VALUES ('CONSUMIDOR FINAL', 'PERICO')")
-
         page.title = "XIOMI Distribuidora"
-        page.theme_mode = ft.ThemeMode.LIGHT
+        page.theme_mode = "light"
+        
+        # Arrancamos la base de datos de forma segura
         inicializar_base_datos()
-            
+        
         carrito = {}
         estado_carrito = {"editando": False, "id_factura": None, "cargado": False}
 
@@ -180,14 +103,14 @@ def main(page: ft.Page):
                 # PANTALLA 3: EL CARRITO Y CLIENTE INSTANTÁNEO
                 elif page.route == "/carrito":
                     texto_total = ft.Text("TOTAL: $ 0.00", size=22, weight="bold", color="white")
-                    lista_carrito_ui = ft.Column(scroll=ft.ScrollMode.AUTO, expand=True)
+                    lista_carrito_ui = ft.Column(scroll="auto", expand=True)
                     opciones_cli = [ft.dropdown.Option(text=nom[0]) for nom in db("SELECT nombre_apellido FROM Clientes", fetch=True, fetchall=True)]
                     cat = {cod: {"nombre": nom, "precio": pre} for cod, nom, pre in db("SELECT codigo_articulo, nombre_articulo, precio_unitario FROM Productos", fetch=True, fetchall=True)}
                     opciones_prod = [ft.dropdown.Option(key=cod, text=f"{v['nombre']} | ${formato_ars(v['precio'])}") for cod, v in cat.items()]
                     
                     dd_clientes = ft.Dropdown(label="1. Seleccionar Cliente", options=opciones_cli, expand=True)
                     dd_productos = ft.Dropdown(label="Seleccionar Artículo", options=opciones_prod, expand=3)
-                    inp_cant = ft.TextField(label="Cant.", keyboard_type=ft.KeyboardType.NUMBER, expand=1)
+                    inp_cant = ft.TextField(label="Cant.", keyboard_type="number", expand=1)
 
                     campo_nom_cli = ft.TextField(label="Nombre", width=300); campo_dir_cli = ft.TextField(label="Dirección", width=300)
                     def guardar_cliente_rapido(e):
@@ -292,7 +215,7 @@ def main(page: ft.Page):
 
                     page.views.append(ft.View("/agregar_cliente", [ft.AppBar(title=ft.Text("Directorio"), bgcolor="#303F9F", color="white", leading=ft.IconButton("arrow_back", icon_color="white", on_click=lambda _: page.go("/"))), inp_nom_c, inp_dir_c, ft.ElevatedButton("GUARDAR", icon="save", on_click=guardar_c, style=ft.ButtonStyle(bgcolor="#303F9F", color="white", padding=20), width=float("inf")), ft.Divider(), ft.Column([tabla_cli], scroll="auto", expand=True)], padding=20)); ref_cli()
 
-                # PANTALLA 6: INFORME DE DESPLIEGUE DE REPORTES EN MOVIL
+                # PANTALLA 6: REPORTES
                 elif page.route == "/reportes":
                     page.views.append(ft.View("/reportes", [
                         ft.AppBar(title=ft.Text("Reportes"), bgcolor="#FF8F00", color="white", leading=ft.IconButton("arrow_back", icon_color="white", on_click=lambda _: page.go("/"))),
@@ -303,11 +226,11 @@ def main(page: ft.Page):
                 
             except Exception as ex:
                 error_pila = traceback.format_exc()
-                page.views.clear()
-                page.views.append(ft.View("/error", [
+                page.clean()  # Borramos todo para destapar la pared de vistas
+                page.add(
                     ft.Text("¡ERROR AL DIBUJAR PANTALLA!", color="white", bgcolor="red", size=24, weight="bold"),
                     ft.Text(error_pila, color="red", selectable=True)
-                ], padding=20, scroll="auto"))
+                )
                 page.update()
 
         page.on_route_change = cambiar_pantalla
@@ -315,11 +238,11 @@ def main(page: ft.Page):
 
     except Exception as e:
         error_pila = traceback.format_exc()
-        page.views.clear()
-        page.views.append(ft.View("/error_grave", [
-            ft.Text("¡ERROR CRÍTICO DE ARRANQUE!", color="white", bgcolor="red", size=24, weight="bold"),
+        page.clean()  # Borramos todo para destapar la pared de vistas
+        page.add(
+            ft.Text("¡CAZAMOS UN ERROR DE ARRANQUE!", color="white", bgcolor="red", size=24, weight="bold"),
             ft.Text(error_pila, color="red", selectable=True)
-        ], padding=20, scroll="auto"))
+        )
         page.update()
 
 if __name__ == "__main__":
