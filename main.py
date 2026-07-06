@@ -33,10 +33,10 @@ def formato_ars(numero):
     return f"{numero:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 # ==========================================
-# 2. MOTORES DE PDF (AISLADOS PARA NO CRASHEAR ANDROID)
+# 2. MOTORES DE PDF (AISLADOS)
 # ==========================================
 def generar_pdf_facturas(ruta_destino, num_factura=None, fecha_consulta=None):
-    from fpdf import FPDF  # Importado acá adentro para que Android arranque rápido
+    from fpdf import FPDF 
     if num_factura:
         facturas = db("SELECT numero_factura FROM Facturas WHERE numero_factura = ?", (num_factura,), fetch=True, fetchall=True)
     elif fecha_consulta:
@@ -114,11 +114,12 @@ def main(page: ft.Page):
         
         carrito = {}
         estado_carrito = {"editando": False, "id_factura": None, "cargado": False}
-        operacion_pdf = {} # Diccionario temporal para guardar qué PDF quiere sacar el usuario
+        operacion_pdf = {} 
 
-        # --- SISTEMA NATIVO DE GUARDADO PARA ANDROID ---
-        def ejecutar_guardado_pdf(e: ft.FilePickerResultEvent):
-            if e.path: # Si el preventista eligió una carpeta y le dio a "Guardar"
+        # --- SISTEMA DE GUARDADO PARA ANDROID (CORREGIDO) ---
+        # ¡AQUÍ ESTÁ LA MAGIA! Le sacamos el "ft.FilePickerResultEvent" que asustaba al celular
+        def ejecutar_guardado_pdf(e):
+            if e.path: 
                 exito = False
                 try:
                     tipo = operacion_pdf.get("tipo")
@@ -134,10 +135,9 @@ def main(page: ft.Page):
                     else:
                         page.snack_bar = ft.SnackBar(ft.Text("❌ No hay facturas para generar reporte.", color="white"), bgcolor="red")
                 except Exception as ex:
-                    page.snack_bar = ft.SnackBar(ft.Text(f"❌ Error interno al guardar: {ex}", color="white"), bgcolor="red")
+                    page.snack_bar = ft.SnackBar(ft.Text(f"❌ Error al guardar: {ex}", color="white"), bgcolor="red")
                 page.snack_bar.open = True; page.update()
 
-        # Conectamos el FilePicker (El explorador de archivos nativo)
         guardar_dialogo = ft.FilePicker(on_result=ejecutar_guardado_pdf)
         page.overlay.append(guardar_dialogo)
 
@@ -277,7 +277,7 @@ def main(page: ft.Page):
                             inp_nom_c.value = ""; inp_dir_c.value = ""; ref_cli()
                     page.views.append(ft.View("/agregar_cliente", [ft.AppBar(title=ft.Text("Directorio"), bgcolor="#303F9F", color="white", leading=ft.IconButton("arrow_back", icon_color="white", on_click=lambda _: page.go("/"))), inp_nom_c, inp_dir_c, ft.ElevatedButton("GUARDAR", icon="save", on_click=guardar_c, style=ft.ButtonStyle(bgcolor="#303F9F", color="white", padding=20), width=float("inf")), ft.Divider(), ft.Column([tabla_cli], scroll="auto", expand=True)], padding=20)); ref_cli()
 
-                # PANTALLA 6: REPORTES - CONECTADA AL GUARDADO NATIVO DE ANDROID
+                # PANTALLA 6: REPORTES NATIVOS DE ANDROID
                 elif page.route == "/reportes":
                     hoy = date.today().strftime("%Y-%m-%d")
                     inp_num = ft.TextField(label="Nro Factura", keyboard_type="number")
@@ -286,9 +286,7 @@ def main(page: ft.Page):
                     inp_fin = ft.TextField(label="Hasta (YYYY-MM-DD)", value=hoy, expand=True)
 
                     def pedir_pdf(tipo, id_f=None, f=None, finio=None, ffin=None):
-                        # Guardamos los parámetros de lo que el preventista quiere
                         operacion_pdf.update({"tipo": tipo, "id_f": id_f, "fecha": f, "finio": finio, "ffin": ffin})
-                        # Disparamos la ventana nativa de Android para guardar el archivo
                         nombre = f"Reporte_XIOMI_{tipo}.pdf"
                         guardar_dialogo.save_file(dialog_title="¿Dónde guardar el PDF?", file_name=nombre, allowed_extensions=["pdf"])
 
