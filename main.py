@@ -330,8 +330,7 @@ def _main_app(page: ft.Page):
         page.add(ft.Text(error_msj, color="red", size=14, weight="bold"))
         page.update()
         return # Frenamos la app aca para que puedas leer el error en tu pantalla
-
-    carrito = {}
+        carrito = {}
 
     # --- Trampa para atrapar errores ocultos en los botones ---
     def atrapar_error_interfaz(e):
