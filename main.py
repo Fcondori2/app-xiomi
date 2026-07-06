@@ -107,7 +107,6 @@ def generar_reporte_generico(ruta_destino, query, parametros, titulo, subtitulo)
 # ==========================================
 def main(page: ft.Page):
     try:
-        # ACA ARRANCA EL ESCUDO PROTECTOR
         page.title = "XIOMI Distribuidora"
         page.theme_mode = ft.ThemeMode.LIGHT
         estilo_btn_principal = ft.ButtonStyle(bgcolor=ft.Colors.BLUE_700, color=ft.Colors.WHITE, padding=20)
@@ -119,162 +118,179 @@ def main(page: ft.Page):
         estado_carrito = {"editando": False, "id_factura": None, "cargado": False}
 
         def cambiar_pantalla(e):
-            page.views.clear()
-            
-            if page.route == "/":
-                page.views.append(ft.View("/", [
-                    ft.AppBar(title=ft.Text("XIOMI Distribuidora", weight="bold"), bgcolor=ft.Colors.BLUE_GREY_900, color=ft.Colors.WHITE, center_title=True),
-                    ft.Container(height=15),
-                    ft.Text("Menú Principal", size=24, weight="bold", color=ft.Colors.BLUE_GREY_900),
-                    ft.ElevatedButton("Gestión de Ventas del Día", icon=ft.Icons.POINT_OF_SALE, on_click=lambda _: page.go("/pedidos_dia"), style=estilo_btn_principal, width=float("inf")),
-                    ft.ElevatedButton("Gestión de Clientes", icon=ft.Icons.PEOPLE, on_click=lambda _: page.go("/agregar_cliente"), style=estilo_btn_secundario, width=float("inf")),
-                    ft.ElevatedButton("Gestión de Productos", icon=ft.Icons.INVENTORY, on_click=lambda _: page.go("/agregar_producto"), style=estilo_btn_secundario, width=float("inf")),
-                    ft.ElevatedButton("Reportes y Facturación", icon=ft.Icons.BAR_CHART, on_click=lambda _: page.go("/reportes"), style=ft.ButtonStyle(bgcolor=ft.Colors.AMBER_800, color="white", padding=20), width=float("inf")),
-                ], padding=20))
+            # ACÁ ESTÁ EL ESCUDO NUEVO: Atrapa cualquier error al dibujar pantallas
+            try:
+                page.views.clear()
+                
+                if page.route == "/":
+                    page.views.append(ft.View("/", [
+                        ft.AppBar(title=ft.Text("XIOMI Distribuidora", weight="bold"), bgcolor=ft.Colors.BLUE_GREY_900, color=ft.Colors.WHITE, center_title=True),
+                        ft.Container(height=15),
+                        ft.Text("Menú Principal", size=24, weight="bold", color=ft.Colors.BLUE_GREY_900),
+                        ft.ElevatedButton("Gestión de Ventas del Día", icon=ft.Icons.POINT_OF_SALE, on_click=lambda _: page.go("/pedidos_dia"), style=estilo_btn_principal, width=float("inf")),
+                        ft.ElevatedButton("Gestión de Clientes", icon=ft.Icons.PEOPLE, on_click=lambda _: page.go("/agregar_cliente"), style=estilo_btn_secundario, width=float("inf")),
+                        ft.ElevatedButton("Gestión de Productos", icon=ft.Icons.INVENTORY, on_click=lambda _: page.go("/agregar_producto"), style=estilo_btn_secundario, width=float("inf")),
+                        ft.ElevatedButton("Reportes y Facturación", icon=ft.Icons.BAR_CHART, on_click=lambda _: page.go("/reportes"), style=ft.ButtonStyle(bgcolor=ft.Colors.AMBER_800, color=ft.Colors.WHITE, padding=20), width=float("inf")),
+                    ], padding=20))
 
-            elif page.route == "/pedidos_dia":
-                hoy = date.today().strftime("%Y-%m-%d")
-                tabla_pedidos = ft.DataTable(columns=[ft.DataColumn(ft.Text(c, weight="bold")) for c in ["Nro", "Cliente", "Total", "X"]], rows=[])
-                def ref_pedidos():
-                    try:
-                        tabla_pedidos.rows.clear()
-                        filas = ejecutar_db("SELECT f.numero_factura, c.nombre_apellido, f.total_a_pagar FROM Facturas f JOIN Clientes c ON f.numero_cliente = c.numero_cliente WHERE f.fecha = ?", (hoy,), fetch=True, fetchall=True)
-                        if filas:
-                            for id_f, cli, tot in filas:
-                                def borrar_p(e, num=id_f):
-                                    ejecutar_db("DELETE FROM Detalle_Factura WHERE numero_factura=?", (num,))
-                                    ejecutar_db("DELETE FROM Facturas WHERE numero_factura=?", (num,))
-                                    ref_pedidos()
-                                def editar_p(e, num=id_f):
-                                    estado_carrito["editando"] = True; estado_carrito["id_factura"] = num; estado_carrito["cargado"] = False; carrito.clear(); page.go("/carrito")
-                                tabla_pedidos.rows.append(ft.DataRow(cells=[ft.DataCell(ft.Text(str(id_f))), ft.DataCell(ft.Text(cli)), ft.DataCell(ft.Text(f"${formato_ars(tot)}")), ft.DataCell(ft.Row([ft.IconButton(ft.Icons.EDIT, icon_color="blue", on_click=editar_p), ft.IconButton(ft.Icons.DELETE, icon_color="red", on_click=borrar_p)]))]))
-                        tabla_pedidos.update()
-                    except: pass
-                def ir_nuevo_pedido(e):
-                    estado_carrito["editando"] = False; estado_carrito["id_factura"] = None; estado_carrito["cargado"] = False; carrito.clear(); page.go("/carrito")
-                page.views.append(ft.View("/pedidos_dia", [ft.AppBar(title=ft.Text("Panel de Ventas"), bgcolor=ft.Colors.BLUE_GREY_900, color="white", leading=ft.IconButton(ft.Icons.ARROW_BACK, icon_color="white", on_click=lambda _: page.go("/"))), ft.ElevatedButton("+ ARMAR NUEVO PEDIDO", icon=ft.Icons.ADD_SHOPPING_CART, on_click=ir_nuevo_pedido, style=estilo_btn_principal, width=float("inf")), ft.Divider(), ft.Text(f"Tickets de hoy ({hoy}):", weight="bold"), ft.Column([tabla_pedidos], scroll="auto", expand=True)], padding=20)); ref_pedidos()
+                elif page.route == "/pedidos_dia":
+                    hoy = date.today().strftime("%Y-%m-%d")
+                    tabla_pedidos = ft.DataTable(columns=[ft.DataColumn(ft.Text(c, weight="bold")) for c in ["Nro", "Cliente", "Total", "X"]], rows=[])
+                    def ref_pedidos():
+                        try:
+                            tabla_pedidos.rows.clear()
+                            filas = ejecutar_db("SELECT f.numero_factura, c.nombre_apellido, f.total_a_pagar FROM Facturas f JOIN Clientes c ON f.numero_cliente = c.numero_cliente WHERE f.fecha = ?", (hoy,), fetch=True, fetchall=True)
+                            if filas:
+                                for id_f, cli, tot in filas:
+                                    def borrar_p(e, num=id_f):
+                                        ejecutar_db("DELETE FROM Detalle_Factura WHERE numero_factura=?", (num,))
+                                        ejecutar_db("DELETE FROM Facturas WHERE numero_factura=?", (num,))
+                                        ref_pedidos()
+                                    def editar_p(e, num=id_f):
+                                        estado_carrito["editando"] = True; estado_carrito["id_factura"] = num; estado_carrito["cargado"] = False; carrito.clear(); page.go("/carrito")
+                                    tabla_pedidos.rows.append(ft.DataRow(cells=[ft.DataCell(ft.Text(str(id_f))), ft.DataCell(ft.Text(cli)), ft.DataCell(ft.Text(f"${formato_ars(tot)}")), ft.DataCell(ft.Row([ft.IconButton(ft.Icons.EDIT, icon_color=ft.Colors.BLUE, on_click=editar_p), ft.IconButton(ft.Icons.DELETE, icon_color=ft.Colors.RED, on_click=borrar_p)]))]))
+                            tabla_pedidos.update()
+                        except: pass
+                    def ir_nuevo_pedido(e):
+                        estado_carrito["editando"] = False; estado_carrito["id_factura"] = None; estado_carrito["cargado"] = False; carrito.clear(); page.go("/carrito")
+                    page.views.append(ft.View("/pedidos_dia", [ft.AppBar(title=ft.Text("Panel de Ventas"), bgcolor=ft.Colors.BLUE_GREY_900, color=ft.Colors.WHITE, leading=ft.IconButton(ft.Icons.ARROW_BACK, icon_color=ft.Colors.WHITE, on_click=lambda _: page.go("/"))), ft.ElevatedButton("+ ARMAR NUEVO PEDIDO", icon=ft.Icons.ADD_SHOPPING_CART, on_click=ir_nuevo_pedido, style=estilo_btn_principal, width=float("inf")), ft.Divider(), ft.Text(f"Tickets de hoy ({hoy}):", weight="bold"), ft.Column([tabla_pedidos], scroll="auto", expand=True)], padding=20)); ref_pedidos()
 
-            elif page.route == "/carrito":
-                texto_total = ft.Text("TOTAL: $ 0.00", size=22, weight="bold", color="white")
-                lista_carrito_ui = ft.Column(scroll=ft.ScrollMode.AUTO, expand=True)
-                opciones_cli = [ft.dropdown.Option(text=nom[0]) for nom in ejecutar_db("SELECT nombre_apellido FROM Clientes", fetch=True, fetchall=True)]
-                cat = {cod: {"nombre": nom, "precio": pre} for cod, nom, pre in ejecutar_db("SELECT codigo_articulo, nombre_articulo, precio_unitario FROM Productos", fetch=True, fetchall=True)}
-                opciones_prod = [ft.dropdown.Option(key=cod, text=f"{v['nombre']} | ${formato_ars(v['precio'])}") for cod, v in cat.items()]
-                dd_clientes = ft.Dropdown(label="1. Seleccionar Cliente", options=opciones_cli, expand=True)
-                dd_productos = ft.Dropdown(label="Seleccionar Artículo", options=opciones_prod, expand=3)
-                inp_cant = ft.TextField(label="Cant.", keyboard_type=ft.KeyboardType.NUMBER, expand=1)
+                elif page.route == "/carrito":
+                    texto_total = ft.Text("TOTAL: $ 0.00", size=22, weight="bold", color=ft.Colors.WHITE)
+                    lista_carrito_ui = ft.Column(scroll=ft.ScrollMode.AUTO, expand=True)
+                    opciones_cli = [ft.dropdown.Option(text=nom[0]) for nom in ejecutar_db("SELECT nombre_apellido FROM Clientes", fetch=True, fetchall=True)]
+                    cat = {cod: {"nombre": nom, "precio": pre} for cod, nom, pre in ejecutar_db("SELECT codigo_articulo, nombre_articulo, precio_unitario FROM Productos", fetch=True, fetchall=True)}
+                    opciones_prod = [ft.dropdown.Option(key=cod, text=f"{v['nombre']} | ${formato_ars(v['precio'])}") for cod, v in cat.items()]
+                    dd_clientes = ft.Dropdown(label="1. Seleccionar Cliente", options=opciones_cli, expand=True)
+                    dd_productos = ft.Dropdown(label="Seleccionar Artículo", options=opciones_prod, expand=3)
+                    inp_cant = ft.TextField(label="Cant.", keyboard_type=ft.KeyboardType.NUMBER, expand=1)
 
-                campo_nom_cli = ft.TextField(label="Nombre", width=300); campo_dir_cli = ft.TextField(label="Dirección", width=300)
-                def guardar_cliente_rapido(e):
-                    if not campo_nom_cli.value: return
-                    nom_nuevo = campo_nom_cli.value.upper()
-                    ejecutar_db("INSERT INTO Clientes (nombre_apellido, direccion_entrega) VALUES (?, ?)", (nom_nuevo, campo_dir_cli.value.upper()))
-                    dd_clientes.options.append(ft.dropdown.Option(text=nom_nuevo)); dd_clientes.value = nom_nuevo; dd_clientes.update()
-                    campo_nom_cli.value = ""; campo_dir_cli.value = ""; page.dialog.open = False; page.update()
-                page.dialog = ft.AlertDialog(title=ft.Text("Agregar Cliente"), content=ft.Column([campo_nom_cli, campo_dir_cli], tight=True), actions=[ft.TextButton("Guardar", on_click=guardar_cliente_rapido)])
+                    campo_nom_cli = ft.TextField(label="Nombre", width=300); campo_dir_cli = ft.TextField(label="Dirección", width=300)
+                    def guardar_cliente_rapido(e):
+                        if not campo_nom_cli.value: return
+                        nom_nuevo = campo_nom_cli.value.upper()
+                        ejecutar_db("INSERT INTO Clientes (nombre_apellido, direccion_entrega) VALUES (?, ?)", (nom_nuevo, campo_dir_cli.value.upper()))
+                        dd_clientes.options.append(ft.dropdown.Option(text=nom_nuevo)); dd_clientes.value = nom_nuevo; dd_clientes.update()
+                        campo_nom_cli.value = ""; campo_dir_cli.value = ""; page.dialog.open = False; page.update()
+                    page.dialog = ft.AlertDialog(title=ft.Text("Agregar Cliente"), content=ft.Column([campo_nom_cli, campo_dir_cli], tight=True), actions=[ft.TextButton("Guardar", on_click=guardar_cliente_rapido)])
 
-                if estado_carrito["editando"]:
-                    id_fac = estado_carrito["id_factura"]
-                    cliente_actual = ejecutar_db("SELECT c.nombre_apellido FROM Facturas f JOIN Clientes c ON f.numero_cliente = c.numero_cliente WHERE f.numero_factura = ?", (id_fac,), fetch=True)
-                    if cliente_actual: dd_clientes.value = cliente_actual[0]
-                    if not estado_carrito["cargado"]:
-                        detalles = ejecutar_db("SELECT d.codigo_articulo, p.nombre_articulo, d.precio_unitario, d.unidades FROM Detalle_Factura d JOIN Productos p ON d.codigo_articulo = p.codigo_articulo WHERE d.numero_factura = ?", (id_fac,), fetch=True, fetchall=True)
-                        carrito.clear()
-                        for cod, nom, pre, uni in detalles: carrito[cod] = {"nombre": nom, "precio": pre, "cantidad": uni}
-                        estado_carrito["cargado"] = True
-
-                def act_carrito():
-                    lista_carrito_ui.controls.clear()
-                    suma = sum(item["cantidad"] * item["precio"] for item in carrito.values())
-                    for cod, item in carrito.items():
-                        def borrar(e, c=cod): del carrito[c]; act_carrito()
-                        lista_carrito_ui.controls.append(ft.ListTile(leading=ft.Icon(ft.Icons.CHECK_CIRCLE, color="green"), title=ft.Text(f"{item['cantidad']}x {item['nombre']}", weight="bold"), subtitle=ft.Text(f"Subtotal: ${formato_ars(item['cantidad'] * item['precio'])}"), trailing=ft.IconButton(ft.Icons.DELETE, icon_color="red", on_click=borrar)))
-                    texto_total.value = f"TOTAL: $ {formato_ars(suma)}"; page.update()
-
-                def agregar(e):
-                    if not dd_productos.value or not inp_cant.value.isdigit() or int(inp_cant.value) <= 0: return
-                    cod, cant = dd_productos.value, int(inp_cant.value)
-                    carrito[cod] = {"nombre": cat[cod]["nombre"], "precio": cat[cod]["precio"], "cantidad": carrito.get(cod, {}).get("cantidad", 0) + cant}
-                    dd_productos.value = None; inp_cant.value = ""; act_carrito()
-
-                def confirmar(e):
-                    if not dd_clientes.value or not carrito: return
-                    num_cli = ejecutar_db("SELECT numero_cliente FROM Clientes WHERE nombre_apellido = ?", (dd_clientes.value,), fetch=True)[0]
-                    tot = sum(item["cantidad"] * item["precio"] for item in carrito.values())
                     if estado_carrito["editando"]:
                         id_fac = estado_carrito["id_factura"]
-                        ejecutar_db("UPDATE Facturas SET numero_cliente = ?, total_a_pagar = ? WHERE numero_factura = ?", (num_cli, tot, id_fac))
-                        ejecutar_db("DELETE FROM Detalle_Factura WHERE numero_factura = ?", (id_fac,))
-                        for cod, item in carrito.items(): ejecutar_db("INSERT INTO Detalle_Factura (numero_factura, codigo_articulo, precio_unitario, unidades, total_linea) VALUES (?, ?, ?, ?, ?)", (id_fac, cod, item["precio"], item["cantidad"], item["cantidad"] * item["precio"]))
-                    else:
-                        ejecutar_db("INSERT INTO Facturas (fecha, numero_cliente, total_a_pagar) VALUES (?, ?, ?)", (date.today().strftime("%Y-%m-%d"), num_cli, tot))
-                        nuevo_num = ejecutar_db("SELECT MAX(numero_factura) FROM Facturas", fetch=True)[0]
-                        for cod, item in carrito.items(): ejecutar_db("INSERT INTO Detalle_Factura (numero_factura, codigo_articulo, precio_unitario, unidades, total_linea) VALUES (?, ?, ?, ?, ?)", (nuevo_num, cod, item["precio"], item["cantidad"], item["cantidad"] * item["precio"]))
-                    carrito.clear(); estado_carrito["editando"] = False; page.go("/pedidos_dia")
+                        cliente_actual = ejecutar_db("SELECT c.nombre_apellido FROM Facturas f JOIN Clientes c ON f.numero_cliente = c.numero_cliente WHERE f.numero_factura = ?", (id_fac,), fetch=True)
+                        if cliente_actual: dd_clientes.value = cliente_actual[0]
+                        if not estado_carrito["cargado"]:
+                            detalles = ejecutar_db("SELECT d.codigo_articulo, p.nombre_articulo, d.precio_unitario, d.unidades FROM Detalle_Factura d JOIN Productos p ON d.codigo_articulo = p.codigo_articulo WHERE d.numero_factura = ?", (id_fac,), fetch=True, fetchall=True)
+                            carrito.clear()
+                            for cod, nom, pre, uni in detalles: carrito[cod] = {"nombre": nom, "precio": pre, "cantidad": uni}
+                            estado_carrito["cargado"] = True
 
-                tit_pantalla = f"CORRIGIENDO TICKET NRO {estado_carrito['id_factura']}" if estado_carrito["editando"] else "Armar Pedido"
-                color_fondo = ft.Colors.BLUE_800 if estado_carrito["editando"] else ft.Colors.BLUE_GREY_900
-                bloque = ft.Card(content=ft.Container(padding=15, content=ft.Column([ft.Row([dd_clientes, ft.IconButton(icon=ft.Icons.PERSON_ADD, icon_color="blue", on_click=lambda _: setattr(page.dialog, 'open', True) or page.update())]), ft.Text("2. Agregar artículos", weight="bold"), ft.Row([dd_productos, inp_cant]), ft.ElevatedButton("AGREGAR", icon=ft.Icons.ADD, on_click=agregar, width=float("inf"))])))
-                pie = ft.Container(bgcolor=color_fondo, padding=20, border_radius=10, content=ft.Column([ft.Row([texto_total], alignment="center"), ft.ElevatedButton("GUARDAR VENTA", icon=ft.Icons.SAVE, on_click=confirmar, bgcolor="green", color="white", width=float("inf"), height=50)]))
-                page.views.append(ft.View("/carrito", [ft.AppBar(title=ft.Text(tit_pantalla), bgcolor=color_fondo, color="white", leading=ft.IconButton(ft.Icons.ARROW_BACK, icon_color="white", on_click=lambda _: page.go("/pedidos_dia"))), bloque, lista_carrito_ui, pie], padding=20)); act_carrito()
+                    def act_carrito():
+                        lista_carrito_ui.controls.clear()
+                        suma = sum(item["cantidad"] * item["precio"] for item in carrito.values())
+                        for cod, item in carrito.items():
+                            def borrar(e, c=cod): del carrito[c]; act_carrito()
+                            lista_carrito_ui.controls.append(ft.ListTile(leading=ft.Icon(ft.Icons.CHECK_CIRCLE, color=ft.Colors.GREEN), title=ft.Text(f"{item['cantidad']}x {item['nombre']}", weight="bold"), subtitle=ft.Text(f"Subtotal: ${formato_ars(item['cantidad'] * item['precio'])}"), trailing=ft.IconButton(ft.Icons.DELETE, icon_color=ft.Colors.RED, on_click=borrar)))
+                        texto_total.value = f"TOTAL: $ {formato_ars(suma)}"; page.update()
 
-            elif page.route == "/agregar_producto":
-                inp_cod = ft.TextField(label="Código (ART-01)", width=float("inf")); inp_nom = ft.TextField(label="Descripción", width=float("inf")); inp_pre = ft.TextField(label="Precio ($)", keyboard_type="number", width=float("inf"))
-                tabla_prod = ft.DataTable(columns=[ft.DataColumn(ft.Text(c, weight="bold")) for c in ["Cod.", "Desc", "Prec", "X"]], rows=[])
-                def ref_prod():
-                    try:
-                        tabla_prod.rows.clear()
-                        filas = ejecutar_db("SELECT codigo_articulo, nombre_articulo, precio_unitario FROM Productos", fetch=True, fetchall=True)
-                        if filas:
-                            for c, n, p in filas:
-                                def borrar_p(e, cod=c): ejecutar_db("DELETE FROM Productos WHERE codigo_articulo=?", (cod,)); ref_prod()
-                                tabla_prod.rows.append(ft.DataRow(cells=[ft.DataCell(ft.Text(str(c))), ft.DataCell(ft.Text(str(n))), ft.DataCell(ft.Text(f"${formato_ars(p)}")), ft.DataCell(ft.IconButton(ft.Icons.DELETE, icon_color="red", on_click=borrar_p))]))
-                        tabla_prod.update()
-                    except: pass
-                def guardar_p(e):
-                    if inp_cod.value and inp_nom.value and inp_pre.value:
-                        ejecutar_db("INSERT INTO Productos VALUES (?, ?, ?)", (inp_cod.value.strip().upper(), inp_nom.value.strip().upper(), float(inp_pre.value.replace(',','.'))))
-                        inp_cod.value = ""; inp_nom.value = ""; inp_pre.value = ""; ref_prod()
-                page.views.append(ft.View("/agregar_producto", [ft.AppBar(title=ft.Text("Catálogo"), bgcolor=ft.Colors.TEAL_800, color="white", leading=ft.IconButton(ft.Icons.ARROW_BACK, icon_color="white", on_click=lambda _: page.go("/"))), inp_cod, inp_nom, inp_pre, ft.ElevatedButton("GUARDAR", icon=ft.Icons.SAVE, on_click=guardar_p, style=estilo_btn_secundario, width=float("inf")), ft.Divider(), ft.Column([tabla_prod], scroll="auto", expand=True)], padding=20)); ref_prod()
+                    def agregar(e):
+                        if not dd_productos.value or not inp_cant.value.isdigit() or int(inp_cant.value) <= 0: return
+                        cod, cant = dd_productos.value, int(inp_cant.value)
+                        carrito[cod] = {"nombre": cat[cod]["nombre"], "precio": cat[cod]["precio"], "cantidad": carrito.get(cod, {}).get("cantidad", 0) + cant}
+                        dd_productos.value = None; inp_cant.value = ""; act_carrito()
 
-            elif page.route == "/agregar_cliente":
-                inp_nom_c = ft.TextField(label="Nombre", width=float("inf")); inp_dir_c = ft.TextField(label="Dirección", width=float("inf"))
-                tabla_cli = ft.DataTable(columns=[ft.DataColumn(ft.Text(c, weight="bold")) for c in ["ID", "Nombre", "Dirección", "X"]], rows=[])
-                def ref_cli():
-                    try:
-                        tabla_cli.rows.clear()
-                        filas = ejecutar_db("SELECT numero_cliente, nombre_apellido, direccion_entrega FROM Clientes", fetch=True, fetchall=True)
-                        if filas:
-                            for id_c, n, d in filas:
-                                def borrar_c(e, num=id_c): ejecutar_db("DELETE FROM Clientes WHERE numero_cliente=?", (num,)); ref_cli()
-                                tabla_cli.rows.append(ft.DataRow(cells=[ft.DataCell(ft.Text(str(id_c))), ft.DataCell(ft.Text(str(n))), ft.DataCell(ft.Text(str(d if d else ""))), ft.DataCell(ft.IconButton(ft.Icons.DELETE, icon_color="red", on_click=borrar_c))]))
-                        tabla_cli.update()
-                    except: pass
-                def guardar_c(e):
-                    if inp_nom_c.value:
-                        ejecutar_db("INSERT INTO Clientes (nombre_apellido, direccion_entrega) VALUES (?, ?)", (inp_nom_c.value.upper(), inp_dir_c.value))
-                        inp_nom_c.value = ""; inp_dir_c.value = ""; ref_cli()
-                page.views.append(ft.View("/agregar_cliente", [ft.AppBar(title=ft.Text("Directorio"), bgcolor=ft.Colors.INDIGO_800, color="white", leading=ft.IconButton(ft.Icons.ARROW_BACK, icon_color="white", on_click=lambda _: page.go("/"))), inp_nom_c, inp_dir_c, ft.ElevatedButton("GUARDAR", icon=ft.Icons.SAVE, on_click=guardar_c, style=estilo_btn_secundario, width=float("inf")), ft.Divider(), ft.Column([tabla_cli], scroll="auto", expand=True)], padding=20)); ref_cli()
+                    def confirmar(e):
+                        if not dd_clientes.value or not carrito: return
+                        num_cli = ejecutar_db("SELECT numero_cliente FROM Clientes WHERE nombre_apellido = ?", (dd_clientes.value,), fetch=True)[0]
+                        tot = sum(item["cantidad"] * item["precio"] for item in carrito.values())
+                        if estado_carrito["editando"]:
+                            id_fac = estado_carrito["id_factura"]
+                            ejecutar_db("UPDATE Facturas SET numero_cliente = ?, total_a_pagar = ? WHERE numero_factura = ?", (num_cli, tot, id_fac))
+                            ejecutar_db("DELETE FROM Detalle_Factura WHERE numero_factura = ?", (id_fac,))
+                            for cod, item in carrito.items(): ejecutar_db("INSERT INTO Detalle_Factura (numero_factura, codigo_articulo, precio_unitario, unidades, total_linea) VALUES (?, ?, ?, ?, ?)", (id_fac, cod, item["precio"], item["cantidad"], item["cantidad"] * item["precio"]))
+                        else:
+                            ejecutar_db("INSERT INTO Facturas (fecha, numero_cliente, total_a_pagar) VALUES (?, ?, ?)", (date.today().strftime("%Y-%m-%d"), num_cli, tot))
+                            nuevo_num = ejecutar_db("SELECT MAX(numero_factura) FROM Facturas", fetch=True)[0]
+                            for cod, item in carrito.items(): ejecutar_db("INSERT INTO Detalle_Factura (numero_factura, codigo_articulo, precio_unitario, unidades, total_linea) VALUES (?, ?, ?, ?, ?)", (nuevo_num, cod, item["precio"], item["cantidad"], item["cantidad"] * item["precio"]))
+                        carrito.clear(); estado_carrito["editando"] = False; page.go("/pedidos_dia")
 
-            elif page.route == "/reportes":
-                page.views.append(ft.View("/reportes", [
-                    ft.AppBar(title=ft.Text("Reportes"), bgcolor=ft.Colors.AMBER_800, color="white", leading=ft.IconButton(ft.Icons.ARROW_BACK, icon_color="white", on_click=lambda _: page.go("/"))),
-                    ft.Text("Los reportes en PDF estarán disponibles próximamente en la versión móvil.", weight="bold", color="red")
-                ], padding=20, scroll="auto"))
+                    tit_pantalla = f"CORRIGIENDO TICKET NRO {estado_carrito['id_factura']}" if estado_carrito["editando"] else "Armar Pedido"
+                    color_fondo = ft.Colors.BLUE_800 if estado_carrito["editando"] else ft.Colors.BLUE_GREY_900
+                    bloque = ft.Card(content=ft.Container(padding=15, content=ft.Column([ft.Row([dd_clientes, ft.IconButton(icon=ft.Icons.PERSON_ADD, icon_color=ft.Colors.BLUE, on_click=lambda _: setattr(page.dialog, 'open', True) or page.update())]), ft.Text("2. Agregar artículos", weight="bold"), ft.Row([dd_productos, inp_cant]), ft.ElevatedButton("AGREGAR", icon=ft.Icons.ADD, on_click=agregar, width=float("inf"))])))
+                    pie = ft.Container(bgcolor=color_fondo, padding=20, border_radius=10, content=ft.Column([ft.Row([texto_total], alignment="center"), ft.ElevatedButton("GUARDAR VENTA", icon=ft.Icons.SAVE, on_click=confirmar, bgcolor=ft.Colors.GREEN, color=ft.Colors.WHITE, width=float("inf"), height=50)]))
+                    page.views.append(ft.View("/carrito", [ft.AppBar(title=ft.Text(tit_pantalla), bgcolor=color_fondo, color=ft.Colors.WHITE, leading=ft.IconButton(ft.Icons.ARROW_BACK, icon_color=ft.Colors.WHITE, on_click=lambda _: page.go("/pedidos_dia"))), bloque, lista_carrito_ui, pie], padding=20)); act_carrito()
 
-            page.update()
+                elif page.route == "/agregar_producto":
+                    inp_cod = ft.TextField(label="Código (ART-01)", width=float("inf")); inp_nom = ft.TextField(label="Descripción", width=float("inf")); inp_pre = ft.TextField(label="Precio ($)", keyboard_type="number", width=float("inf"))
+                    tabla_prod = ft.DataTable(columns=[ft.DataColumn(ft.Text(c, weight="bold")) for c in ["Cod.", "Desc", "Prec", "X"]], rows=[])
+                    def ref_prod():
+                        try:
+                            tabla_prod.rows.clear()
+                            filas = ejecutar_db("SELECT codigo_articulo, nombre_articulo, precio_unitario FROM Productos", fetch=True, fetchall=True)
+                            if filas:
+                                for c, n, p in filas:
+                                    def borrar_p(e, cod=c): ejecutar_db("DELETE FROM Productos WHERE codigo_articulo=?", (cod,)); ref_prod()
+                                    tabla_prod.rows.append(ft.DataRow(cells=[ft.DataCell(ft.Text(str(c))), ft.DataCell(ft.Text(str(n))), ft.DataCell(ft.Text(f"${formato_ars(p)}")), ft.DataCell(ft.IconButton(ft.Icons.DELETE, icon_color=ft.Colors.RED, on_click=borrar_p))]))
+                            tabla_prod.update()
+                        except: pass
+                    def guardar_p(e):
+                        if inp_cod.value and inp_nom.value and inp_pre.value:
+                            ejecutar_db("INSERT INTO Productos VALUES (?, ?, ?)", (inp_cod.value.strip().upper(), inp_nom.value.strip().upper(), float(inp_pre.value.replace(',','.'))))
+                            inp_cod.value = ""; inp_nom.value = ""; inp_pre.value = ""; ref_prod()
+                    page.views.append(ft.View("/agregar_producto", [ft.AppBar(title=ft.Text("Catálogo"), bgcolor=ft.Colors.TEAL_800, color=ft.Colors.WHITE, leading=ft.IconButton(ft.Icons.ARROW_BACK, icon_color=ft.Colors.WHITE, on_click=lambda _: page.go("/"))), inp_cod, inp_nom, inp_pre, ft.ElevatedButton("GUARDAR", icon=ft.Icons.SAVE, on_click=guardar_p, style=estilo_btn_secundario, width=float("inf")), ft.Divider(), ft.Column([tabla_prod], scroll="auto", expand=True)], padding=20)); ref_prod()
+
+                elif page.route == "/agregar_cliente":
+                    inp_nom_c = ft.TextField(label="Nombre", width=float("inf")); inp_dir_c = ft.TextField(label="Dirección", width=float("inf"))
+                    tabla_cli = ft.DataTable(columns=[ft.DataColumn(ft.Text(c, weight="bold")) for c in ["ID", "Nombre", "Dirección", "X"]], rows=[])
+                    def ref_cli():
+                        try:
+                            tabla_cli.rows.clear()
+                            filas = ejecutar_db("SELECT numero_cliente, nombre_apellido, direccion_entrega FROM Clientes", fetch=True, fetchall=True)
+                            if filas:
+                                for id_c, n, d in filas:
+                                    def borrar_c(e, num=id_c): ejecutar_db("DELETE FROM Clientes WHERE numero_cliente=?", (num,)); ref_cli()
+                                    tabla_cli.rows.append(ft.DataRow(cells=[ft.DataCell(ft.Text(str(id_c))), ft.DataCell(ft.Text(str(n))), ft.DataCell(ft.Text(str(d if d else ""))), ft.DataCell(ft.IconButton(ft.Icons.DELETE, icon_color=ft.Colors.RED, on_click=borrar_c))]))
+                            tabla_cli.update()
+                        except: pass
+                    def guardar_c(e):
+                        if inp_nom_c.value:
+                            ejecutar_db("INSERT INTO Clientes (nombre_apellido, direccion_entrega) VALUES (?, ?)", (inp_nom_c.value.upper(), inp_dir_c.value))
+                            inp_nom_c.value = ""; inp_dir_c.value = ""; ref_cli()
+                    page.views.append(ft.View("/agregar_cliente", [ft.AppBar(title=ft.Text("Directorio"), bgcolor=ft.Colors.INDIGO_800, color=ft.Colors.WHITE, leading=ft.IconButton(ft.Icons.ARROW_BACK, icon_color=ft.Colors.WHITE, on_click=lambda _: page.go("/"))), inp_nom_c, inp_dir_c, ft.ElevatedButton("GUARDAR", icon=ft.Icons.SAVE, on_click=guardar_c, style=estilo_btn_secundario, width=float("inf")), ft.Divider(), ft.Column([tabla_cli], scroll="auto", expand=True)], padding=20)); ref_cli()
+
+                elif page.route == "/reportes":
+                    page.views.append(ft.View("/reportes", [
+                        ft.AppBar(title=ft.Text("Reportes"), bgcolor=ft.Colors.AMBER_800, color=ft.Colors.WHITE, leading=ft.IconButton(ft.Icons.ARROW_BACK, icon_color=ft.Colors.WHITE, on_click=lambda _: page.go("/"))),
+                        ft.Text("Los reportes en PDF estarán disponibles próximamente en la versión móvil.", weight="bold", color=ft.Colors.RED)
+                    ], padding=20, scroll="auto"))
+
+                page.update()
+                
+            except Exception as ex:
+                error_pila = traceback.format_exc()
+                page.views.clear()
+                page.views.append(
+                    ft.View(
+                        "/error",
+                        [
+                            ft.Text("¡ERROR AL DIBUJAR PANTALLA!", color=ft.Colors.WHITE, bgcolor=ft.Colors.RED, size=24, weight="bold"),
+                            ft.Text("Sacale captura a esto por favor:", color=ft.Colors.BLACK, weight="bold"),
+                            ft.Text(error_pila, color=ft.Colors.RED, selectable=True)
+                        ],
+                        padding=20, scroll="auto"
+                    )
+                )
+                page.update()
 
         page.on_route_change = cambiar_pantalla
         page.go("/")
 
-    # SI HAY UN ERROR, EL ESCUDO LO ATRAPA Y LO MUESTRA EN PANTALLA ROJA
     except Exception as e:
         error_pila = traceback.format_exc()
         page.clean()
         page.add(
-            ft.Text("¡CAZAMOS EL ERROR!", color="white", bgcolor="red", size=24, weight="bold"),
-            ft.Text("Sacale captura a este texto:", color="black", weight="bold"),
-            ft.Text(error_pila, color="red", selectable=True)
+            ft.Text("¡CAZAMOS EL ERROR DE ARRANQUE!", color=ft.Colors.WHITE, bgcolor=ft.Colors.RED, size=24, weight="bold"),
+            ft.Text("Sacale captura a este texto:", color=ft.Colors.BLACK, weight="bold"),
+            ft.Text(error_pila, color=ft.Colors.RED, selectable=True)
         )
         page.update()
 
@@ -282,4 +298,4 @@ def main(page: ft.Page):
 # ARRANQUE LIMPIO PARA ANDROID
 # ==========================================
 if __name__ == "__main__":
-    ft.app(target=main) 
+    ft.app(target=main)
