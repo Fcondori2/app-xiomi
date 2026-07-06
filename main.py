@@ -116,8 +116,7 @@ def main(page: ft.Page):
         estado_carrito = {"editando": False, "id_factura": None, "cargado": False}
         operacion_pdf = {} 
 
-        # --- SISTEMA DE GUARDADO PARA ANDROID (CORREGIDO) ---
-        # ¡AQUÍ ESTÁ LA MAGIA! Le sacamos el "ft.FilePickerResultEvent" que asustaba al celular
+        # --- SISTEMA DE GUARDADO PARA ANDROID (SEPARADO EN 2 PASOS) ---
         def ejecutar_guardado_pdf(e):
             if e.path: 
                 exito = False
@@ -138,7 +137,9 @@ def main(page: ft.Page):
                     page.snack_bar = ft.SnackBar(ft.Text(f"❌ Error al guardar: {ex}", color="white"), bgcolor="red")
                 page.snack_bar.open = True; page.update()
 
-        guardar_dialogo = ft.FilePicker(on_result=ejecutar_guardado_pdf)
+        # ACÁ ESTÁ EL ARREGLO PARA QUE ANDROID NO CRASHEE:
+        guardar_dialogo = ft.FilePicker()
+        guardar_dialogo.on_result = ejecutar_guardado_pdf
         page.overlay.append(guardar_dialogo)
 
         def cambiar_pantalla(e):
@@ -277,7 +278,6 @@ def main(page: ft.Page):
                             inp_nom_c.value = ""; inp_dir_c.value = ""; ref_cli()
                     page.views.append(ft.View("/agregar_cliente", [ft.AppBar(title=ft.Text("Directorio"), bgcolor="#303F9F", color="white", leading=ft.IconButton("arrow_back", icon_color="white", on_click=lambda _: page.go("/"))), inp_nom_c, inp_dir_c, ft.ElevatedButton("GUARDAR", icon="save", on_click=guardar_c, style=ft.ButtonStyle(bgcolor="#303F9F", color="white", padding=20), width=float("inf")), ft.Divider(), ft.Column([tabla_cli], scroll="auto", expand=True)], padding=20)); ref_cli()
 
-                # PANTALLA 6: REPORTES NATIVOS DE ANDROID
                 elif page.route == "/reportes":
                     hoy = date.today().strftime("%Y-%m-%d")
                     inp_num = ft.TextField(label="Nro Factura", keyboard_type="number")
