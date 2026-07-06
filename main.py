@@ -1,14 +1,20 @@
 import flet as ft
 import sqlite3
 import time
+import os  # <--- NUEVO IMPORTANTE: Para navegar por las carpetas del celular
 from fpdf import FPDF
 from datetime import date
 
 # ==========================================
 # 1. HERRAMIENTAS DE BASE DE DATOS
 # ==========================================
+# Buscamos la carpeta interna y segura del celular para guardar los datos
+carpeta_segura = os.environ.get("FLET_APP_STORAGE_DATA", ".")
+ruta_db = os.path.join(carpeta_segura, "sistema_ventas.db")
+
 def ejecutar_db(query, parametros=(), fetch=False, fetchall=False):
-    conexion = sqlite3.connect("sistema_ventas.db")
+    # Ahora Python usa la ruta dinámica de Android en lugar de la raíz bloqueada
+    conexion = sqlite3.connect(ruta_db) 
     cursor = conexion.cursor()
     cursor.execute(query, parametros)
     if fetch:
@@ -25,7 +31,8 @@ def inicializar_base_datos():
     ejecutar_db('''CREATE TABLE IF NOT EXISTS Detalle_Factura (id INTEGER PRIMARY KEY AUTOINCREMENT, numero_factura INTEGER, codigo_articulo TEXT, precio_unitario REAL, unidades INTEGER, total_linea REAL)''')
     
     if ejecutar_db("SELECT COUNT(*) FROM Clientes", fetch=True)[0] == 0:
-        ejecutar_db("INSERT INTO Clientes (nombre_apellido, direccion_entrega) VALUES ('CONSUMIDOR FINAL', 'PERICO')")
+        ejecutar_db("INSERT INTO Clientes (nombre_apellido, direccion_entrega) VALUES ('CONSUMIDOR FINAL', 'PERICO')")       
+
 
 # ==========================================
 # 2. MOTOR DE REPORTES PDF (Color Azul Clarito)
