@@ -9,7 +9,7 @@ from datetime import date
 # 1. HERRAMIENTAS DE BASE DE DATOS Y RUTAS
 # ==========================================
 def get_ruta_db():
-    # Calcula la ruta segura del celular en el momento exacto que se necesita
+    # Calcula la ruta segura del celular
     return os.path.join(os.environ.get("FLET_APP_STORAGE_DATA", "."), "sistema_ventas.db")
 
 def db(query, parametros=(), fetch=False, fetchall=False):
@@ -64,7 +64,7 @@ def main(page: ft.Page):
                         ft.ElevatedButton("Reportes y Facturación", icon="bar_chart", on_click=lambda _: page.go("/reportes"), style=ft.ButtonStyle(bgcolor="#FF8F00", color="white", padding=20), width=float("inf")),
                     ], padding=20))
 
-                # PANTALLA 2: PANEL DE CONTROL DE PEDIDOS DEL DIA
+                # PANTALLA 2: PANEL DE CONTROL DE PEDIDOS
                 elif page.route == "/pedidos_dia":
                     hoy = date.today().strftime("%Y-%m-%d")
                     tabla_pedidos = ft.DataTable(columns=[ft.DataColumn(ft.Text(c, weight="bold")) for c in ["Nro", "Cliente", "Total", "X"]], rows=[])
@@ -100,7 +100,7 @@ def main(page: ft.Page):
                     ], padding=20))
                     ref_pedidos()
 
-                # PANTALLA 3: EL CARRITO Y CLIENTE INSTANTÁNEO
+                # PANTALLA 3: EL CARRITO
                 elif page.route == "/carrito":
                     texto_total = ft.Text("TOTAL: $ 0.00", size=22, weight="bold", color="white")
                     lista_carrito_ui = ft.Column(scroll="auto", expand=True)
@@ -167,7 +167,7 @@ def main(page: ft.Page):
                     pie = ft.Container(bgcolor=color_fondo, padding=20, border_radius=10, content=ft.Column([ft.Row([texto_total], alignment="center"), ft.ElevatedButton("GUARDAR VENTA", icon="save", on_click=confirmar, bgcolor="green", color="white", width=float("inf"), height=50)]))
                     page.views.append(ft.View("/carrito", [ft.AppBar(title=ft.Text(tit_pantalla), bgcolor=color_fondo, color="white", leading=ft.IconButton("arrow_back", icon_color="white", on_click=lambda _: page.go("/pedidos_dia"))), bloque, lista_carrito_ui, pie], padding=20)); act_carrito()
 
-                # PANTALLA 4: ABM DE PRODUCTOS NATIVO EN TABLA
+                # PANTALLA 4: ABM DE PRODUCTOS
                 elif page.route == "/agregar_producto":
                     inp_cod = ft.TextField(label="Código (ART-01)", width=float("inf")); inp_nom = ft.TextField(label="Descripción", width=float("inf")); inp_pre = ft.TextField(label="Precio ($)", keyboard_type="number", width=float("inf"))
                     tabla_prod = ft.DataTable(columns=[ft.DataColumn(ft.Text(c, weight="bold")) for c in ["Cod.", "Desc", "Prec", "X"]], rows=[])
@@ -191,7 +191,7 @@ def main(page: ft.Page):
 
                     page.views.append(ft.View("/agregar_producto", [ft.AppBar(title=ft.Text("Catálogo"), bgcolor="#00695C", color="white", leading=ft.IconButton("arrow_back", icon_color="white", on_click=lambda _: page.go("/"))), inp_cod, inp_nom, inp_pre, ft.ElevatedButton("GUARDAR", icon="save", on_click=guardar_p, style=ft.ButtonStyle(bgcolor="#00695C", color="white", padding=20), width=float("inf")), ft.Divider(), ft.Column([tabla_prod], scroll="auto", expand=True)], padding=20)); ref_prod()
 
-                # PANTALLA 5: ABM DE CLIENTES NATIVO EN TABLA
+                # PANTALLA 5: ABM DE CLIENTES
                 elif page.route == "/agregar_cliente":
                     inp_nom_c = ft.TextField(label="Nombre", width=float("inf")); inp_dir_c = ft.TextField(label="Dirección", width=float("inf"))
                     tabla_cli = ft.DataTable(columns=[ft.DataColumn(ft.Text(c, weight="bold")) for c in ["ID", "Nombre", "Dirección", "X"]], rows=[])
@@ -226,7 +226,7 @@ def main(page: ft.Page):
                 
             except Exception as ex:
                 error_pila = traceback.format_exc()
-                page.clean()  # Borramos todo para destapar la pared de vistas
+                page.clean()  
                 page.add(
                     ft.Text("¡ERROR AL DIBUJAR PANTALLA!", color="white", bgcolor="red", size=24, weight="bold"),
                     ft.Text(error_pila, color="red", selectable=True)
@@ -238,12 +238,19 @@ def main(page: ft.Page):
 
     except Exception as e:
         error_pila = traceback.format_exc()
-        page.clean()  # Borramos todo para destapar la pared de vistas
+        page.clean() 
         page.add(
             ft.Text("¡CAZAMOS UN ERROR DE ARRANQUE!", color="white", bgcolor="red", size=24, weight="bold"),
             ft.Text(error_pila, color="red", selectable=True)
         )
         page.update()
 
+# ======================================================================
+# ATENCIÓN: ESTA ÚLTIMA LÍNEA DEFINE SI ABRÍS EN COMPU O EN EL CELULAR
+# ======================================================================
 if __name__ == "__main__":
+    # ---> SI LO VAS A SUBIR A GITHUB PARA EL CELULAR, USA ESTA LÍNEA:
     ft.app(target=main)
+    
+    # ---> SI LO QUERÉS PROBAR EN LA COMPU (JUANA MANSO), BORRÁ LA LÍNEA DE ARRIBA Y USA ESTA:
+    # ft.app(target=main, view=ft.AppView.WEB_BROWSER)
