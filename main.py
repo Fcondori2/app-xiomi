@@ -129,8 +129,8 @@ def generar_reporte_generico(ruta_destino, query, parametros, titulo, subtitulo)
 def main(page: ft.Page):
     page.title = "XIOMI Distribuidora"
     page.theme_mode = ft.ThemeMode.LIGHT
-    estilo_btn_principal = ft.ButtonStyle(bgcolor=ft.colors.BLUE_700, color=ft.colors.WHITE, padding=20)
-    estilo_btn_secundario = ft.ButtonStyle(bgcolor=ft.colors.INDIGO_600, color=ft.colors.WHITE, padding=20)
+    estilo_btn_principal = ft.ButtonStyle(bgcolor=ft.Colors.BLUE_700, color=ft.Colors.WHITE, padding=20)
+    estilo_btn_secundario = ft.ButtonStyle(bgcolor=ft.Colors.INDIGO_600, color=ft.Colors.WHITE, padding=20)
 
     try: inicializar_base_datos()
     except Exception as e:
@@ -145,13 +145,13 @@ def main(page: ft.Page):
         # PANTALLA 1: INICIO (Limpia y corporativa)
         if page.route == "/":
             page.views.append(ft.View("/", [
-                ft.AppBar(title=ft.Text("XIOMI Distribuidora", weight="bold"), bgcolor=ft.colors.BLUE_GREY_900, color=ft.colors.WHITE, center_title=True),
+                ft.AppBar(title=ft.Text("XIOMI Distribuidora", weight="bold"), bgcolor=ft.Colors.BLUE_GREY_900, color=ft.Colors.WHITE, center_title=True),
                 ft.Container(height=15),
-                ft.Text("Menú Principal", size=24, weight="bold", color=ft.colors.BLUE_GREY_900),
-                ft.ElevatedButton("Gestión de Ventas del Día", icon=ft.icons.POINT_OF_SALE, on_click=lambda _: page.go("/pedidos_dia"), style=estilo_btn_principal, width=float("inf")),
-                ft.ElevatedButton("Gestión de Clientes", icon=ft.icons.PEOPLE, on_click=lambda _: page.go("/agregar_cliente"), style=estilo_btn_secundario, width=float("inf")),
-                ft.ElevatedButton("Gestión de Productos", icon=ft.icons.INVENTORY, on_click=lambda _: page.go("/agregar_producto"), style=estilo_btn_secundario, width=float("inf")),
-                ft.ElevatedButton("Reportes y Facturación", icon=ft.icons.BAR_CHART, on_click=lambda _: page.go("/reportes"), style=ft.ButtonStyle(bgcolor=ft.colors.AMBER_800, color="white", padding=20), width=float("inf")),
+                ft.Text("Menú Principal", size=24, weight="bold", color=ft.Colors.BLUE_GREY_900),
+                ft.ElevatedButton("Gestión de Ventas del Día", icon=ft.Icons.POINT_OF_SALE, on_click=lambda _: page.go("/pedidos_dia"), style=estilo_btn_principal, width=float("inf")),
+                ft.ElevatedButton("Gestión de Clientes", icon=ft.Icons.PEOPLE, on_click=lambda _: page.go("/agregar_cliente"), style=estilo_btn_secundario, width=float("inf")),
+                ft.ElevatedButton("Gestión de Productos", icon=ft.Icons.INVENTORY, on_click=lambda _: page.go("/agregar_producto"), style=estilo_btn_secundario, width=float("inf")),
+                ft.ElevatedButton("Reportes y Facturación", icon=ft.Icons.BAR_CHART, on_click=lambda _: page.go("/reportes"), style=ft.ButtonStyle(bgcolor=ft.Colors.AMBER_800, color="white", padding=20), width=float("inf")),
             ], padding=20))
 
         # PANTALLA 2: PEDIDOS DEL DÍA
@@ -180,8 +180,8 @@ def main(page: ft.Page):
                                 page.go("/carrito")
                                 
                             fila_botones = ft.Row([
-                                ft.IconButton(ft.icons.EDIT, icon_color="blue", on_click=editar_p, tooltip="Editar Ticket"),
-                                ft.IconButton(ft.icons.DELETE, icon_color="red", on_click=borrar_p, tooltip="Anular Venta")
+                                ft.IconButton(ft.Icons.EDIT, icon_color="blue", on_click=editar_p, tooltip="Editar Ticket"),
+                                ft.IconButton(ft.Icons.DELETE, icon_color="red", on_click=borrar_p, tooltip="Anular Venta")
                             ])
                             tabla_pedidos.rows.append(ft.DataRow(cells=[
                                 ft.DataCell(ft.Text(str(id_f))), ft.DataCell(ft.Text(cli)), 
@@ -195,8 +195,8 @@ def main(page: ft.Page):
                 carrito.clear(); page.go("/carrito")
 
             page.views.append(ft.View("/pedidos_dia", [
-                ft.AppBar(title=ft.Text("Panel de Ventas"), bgcolor=ft.colors.BLUE_GREY_900, color="white", leading=ft.IconButton(ft.icons.ARROW_BACK, icon_color="white", on_click=lambda _: page.go("/"))), 
-                ft.ElevatedButton("+ ARMAR NUEVO PEDIDO", icon=ft.icons.ADD_SHOPPING_CART, on_click=ir_nuevo_pedido, style=estilo_btn_principal, width=float("inf")),
+                ft.AppBar(title=ft.Text("Panel de Ventas"), bgcolor=ft.Colors.BLUE_GREY_900, color="white", leading=ft.IconButton(ft.Icons.ARROW_BACK, icon_color="white", on_click=lambda _: page.go("/"))), 
+                ft.ElevatedButton("+ ARMAR NUEVO PEDIDO", icon=ft.Icons.ADD_SHOPPING_CART, on_click=ir_nuevo_pedido, style=estilo_btn_principal, width=float("inf")),
                 ft.Divider(), ft.Text(f"Tickets generados hoy ({hoy}):", weight="bold"), 
                 ft.Column([tabla_pedidos], scroll="auto", expand=True)
             ], padding=20))
