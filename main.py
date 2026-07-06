@@ -7,8 +7,9 @@ from fpdf import FPDF
 from datetime import date
 
 # ==========================================
-# 1. HERRAMIENTAS DE BASE DE DATOS
+# 1. HERRAMIENTAS DE BASE DE DATOS (ANDROID SAFE)
 # ==========================================
+# Esto guarda la base de datos en la bóveda segura del celular
 carpeta_segura = os.environ.get("FLET_APP_STORAGE_DATA", ".")
 ruta_db = os.path.join(carpeta_segura, "sistema_ventas.db")
 
@@ -110,9 +111,9 @@ def main(page: ft.Page):
         page.title = "XIOMI Distribuidora"
         page.theme_mode = ft.ThemeMode.LIGHT
         
-        # ACÁ ESTÁN LAS MINÚSCULAS QUE TU COMPU NECESITA
-        estilo_btn_principal = ft.ButtonStyle(bgcolor=ft.colors.BLUE_700, color=ft.colors.WHITE, padding=20)
-        estilo_btn_secundario = ft.ButtonStyle(bgcolor=ft.colors.INDIGO_600, color=ft.colors.WHITE, padding=20)
+        # COLORES Y BOTONES CON MAYÚSCULA PARA GITHUB Y ANDROID
+        estilo_btn_principal = ft.ButtonStyle(bgcolor=ft.Colors.BLUE_700, color=ft.Colors.WHITE, padding=20)
+        estilo_btn_secundario = ft.ButtonStyle(bgcolor=ft.Colors.INDIGO_600, color=ft.Colors.WHITE, padding=20)
 
         inicializar_base_datos()
             
@@ -125,13 +126,13 @@ def main(page: ft.Page):
                 
                 if page.route == "/":
                     page.views.append(ft.View("/", [
-                        ft.AppBar(title=ft.Text("XIOMI Distribuidora", weight="bold"), bgcolor=ft.colors.BLUE_GREY_900, color=ft.colors.WHITE, center_title=True),
+                        ft.AppBar(title=ft.Text("XIOMI Distribuidora", weight="bold"), bgcolor=ft.Colors.BLUE_GREY_900, color=ft.Colors.WHITE, center_title=True),
                         ft.Container(height=15),
-                        ft.Text("Menú Principal", size=24, weight="bold", color=ft.colors.BLUE_GREY_900),
-                        ft.ElevatedButton("Gestión de Ventas del Día", icon=ft.icons.POINT_OF_SALE, on_click=lambda _: page.go("/pedidos_dia"), style=estilo_btn_principal, width=float("inf")),
-                        ft.ElevatedButton("Gestión de Clientes", icon=ft.icons.PEOPLE, on_click=lambda _: page.go("/agregar_cliente"), style=estilo_btn_secundario, width=float("inf")),
-                        ft.ElevatedButton("Gestión de Productos", icon=ft.icons.INVENTORY, on_click=lambda _: page.go("/agregar_producto"), style=estilo_btn_secundario, width=float("inf")),
-                        ft.ElevatedButton("Reportes y Facturación", icon=ft.icons.BAR_CHART, on_click=lambda _: page.go("/reportes"), style=ft.ButtonStyle(bgcolor=ft.colors.AMBER_800, color=ft.colors.WHITE, padding=20), width=float("inf")),
+                        ft.Text("Menú Principal", size=24, weight="bold", color=ft.Colors.BLUE_GREY_900),
+                        ft.ElevatedButton("Gestión de Ventas del Día", icon=ft.Icons.POINT_OF_SALE, on_click=lambda _: page.go("/pedidos_dia"), style=estilo_btn_principal, width=float("inf")),
+                        ft.ElevatedButton("Gestión de Clientes", icon=ft.Icons.PEOPLE, on_click=lambda _: page.go("/agregar_cliente"), style=estilo_btn_secundario, width=float("inf")),
+                        ft.ElevatedButton("Gestión de Productos", icon=ft.Icons.INVENTORY, on_click=lambda _: page.go("/agregar_producto"), style=estilo_btn_secundario, width=float("inf")),
+                        ft.ElevatedButton("Reportes y Facturación", icon=ft.Icons.BAR_CHART, on_click=lambda _: page.go("/reportes"), style=ft.ButtonStyle(bgcolor=ft.Colors.AMBER_800, color=ft.Colors.WHITE, padding=20), width=float("inf")),
                     ], padding=20))
 
                 elif page.route == "/pedidos_dia":
@@ -149,15 +150,15 @@ def main(page: ft.Page):
                                         ref_pedidos()
                                     def editar_p(e, num=id_f):
                                         estado_carrito["editando"] = True; estado_carrito["id_factura"] = num; estado_carrito["cargado"] = False; carrito.clear(); page.go("/carrito")
-                                    tabla_pedidos.rows.append(ft.DataRow(cells=[ft.DataCell(ft.Text(str(id_f))), ft.DataCell(ft.Text(cli)), ft.DataCell(ft.Text(f"${formato_ars(tot)}")), ft.DataCell(ft.Row([ft.IconButton(ft.icons.EDIT, icon_color=ft.colors.BLUE, on_click=editar_p), ft.IconButton(ft.icons.DELETE, icon_color=ft.colors.RED, on_click=borrar_p)]))]))
+                                    tabla_pedidos.rows.append(ft.DataRow(cells=[ft.DataCell(ft.Text(str(id_f))), ft.DataCell(ft.Text(cli)), ft.DataCell(ft.Text(f"${formato_ars(tot)}")), ft.DataCell(ft.Row([ft.IconButton(ft.Icons.EDIT, icon_color=ft.Colors.BLUE, on_click=editar_p), ft.IconButton(ft.Icons.DELETE, icon_color=ft.Colors.RED, on_click=borrar_p)]))]))
                             tabla_pedidos.update()
                         except: pass
                     def ir_nuevo_pedido(e):
                         estado_carrito["editando"] = False; estado_carrito["id_factura"] = None; estado_carrito["cargado"] = False; carrito.clear(); page.go("/carrito")
-                    page.views.append(ft.View("/pedidos_dia", [ft.AppBar(title=ft.Text("Panel de Ventas"), bgcolor=ft.colors.BLUE_GREY_900, color=ft.colors.WHITE, leading=ft.IconButton(ft.icons.ARROW_BACK, icon_color=ft.colors.WHITE, on_click=lambda _: page.go("/"))), ft.ElevatedButton("+ ARMAR NUEVO PEDIDO", icon=ft.icons.ADD_SHOPPING_CART, on_click=ir_nuevo_pedido, style=estilo_btn_principal, width=float("inf")), ft.Divider(), ft.Text(f"Tickets de hoy ({hoy}):", weight="bold"), ft.Column([tabla_pedidos], scroll="auto", expand=True)], padding=20)); ref_pedidos()
+                    page.views.append(ft.View("/pedidos_dia", [ft.AppBar(title=ft.Text("Panel de Ventas"), bgcolor=ft.Colors.BLUE_GREY_900, color=ft.Colors.WHITE, leading=ft.IconButton(ft.Icons.ARROW_BACK, icon_color=ft.Colors.WHITE, on_click=lambda _: page.go("/"))), ft.ElevatedButton("+ ARMAR NUEVO PEDIDO", icon=ft.Icons.ADD_SHOPPING_CART, on_click=ir_nuevo_pedido, style=estilo_btn_principal, width=float("inf")), ft.Divider(), ft.Text(f"Tickets de hoy ({hoy}):", weight="bold"), ft.Column([tabla_pedidos], scroll="auto", expand=True)], padding=20)); ref_pedidos()
 
                 elif page.route == "/carrito":
-                    texto_total = ft.Text("TOTAL: $ 0.00", size=22, weight="bold", color=ft.colors.WHITE)
+                    texto_total = ft.Text("TOTAL: $ 0.00", size=22, weight="bold", color=ft.Colors.WHITE)
                     lista_carrito_ui = ft.Column(scroll=ft.ScrollMode.AUTO, expand=True)
                     opciones_cli = [ft.dropdown.Option(text=nom[0]) for nom in ejecutar_db("SELECT nombre_apellido FROM Clientes", fetch=True, fetchall=True)]
                     cat = {cod: {"nombre": nom, "precio": pre} for cod, nom, pre in ejecutar_db("SELECT codigo_articulo, nombre_articulo, precio_unitario FROM Productos", fetch=True, fetchall=True)}
@@ -190,7 +191,7 @@ def main(page: ft.Page):
                         suma = sum(item["cantidad"] * item["precio"] for item in carrito.values())
                         for cod, item in carrito.items():
                             def borrar(e, c=cod): del carrito[c]; act_carrito()
-                            lista_carrito_ui.controls.append(ft.ListTile(leading=ft.Icon(ft.icons.CHECK_CIRCLE, color=ft.colors.GREEN), title=ft.Text(f"{item['cantidad']}x {item['nombre']}", weight="bold"), subtitle=ft.Text(f"Subtotal: ${formato_ars(item['cantidad'] * item['precio'])}"), trailing=ft.IconButton(ft.icons.DELETE, icon_color=ft.colors.RED, on_click=borrar)))
+                            lista_carrito_ui.controls.append(ft.ListTile(leading=ft.Icon(ft.Icons.CHECK_CIRCLE, color=ft.Colors.GREEN), title=ft.Text(f"{item['cantidad']}x {item['nombre']}", weight="bold"), subtitle=ft.Text(f"Subtotal: ${formato_ars(item['cantidad'] * item['precio'])}"), trailing=ft.IconButton(ft.Icons.DELETE, icon_color=ft.Colors.RED, on_click=borrar)))
                         texto_total.value = f"TOTAL: $ {formato_ars(suma)}"; page.update()
 
                     def agregar(e):
@@ -215,10 +216,10 @@ def main(page: ft.Page):
                         carrito.clear(); estado_carrito["editando"] = False; page.go("/pedidos_dia")
 
                     tit_pantalla = f"CORRIGIENDO TICKET NRO {estado_carrito['id_factura']}" if estado_carrito["editando"] else "Armar Pedido"
-                    color_fondo = ft.colors.BLUE_800 if estado_carrito["editando"] else ft.colors.BLUE_GREY_900
-                    bloque = ft.Card(content=ft.Container(padding=15, content=ft.Column([ft.Row([dd_clientes, ft.IconButton(icon=ft.icons.PERSON_ADD, icon_color=ft.colors.BLUE, on_click=lambda _: setattr(page.dialog, 'open', True) or page.update())]), ft.Text("2. Agregar artículos", weight="bold"), ft.Row([dd_productos, inp_cant]), ft.ElevatedButton("AGREGAR", icon=ft.icons.ADD, on_click=agregar, width=float("inf"))])))
-                    pie = ft.Container(bgcolor=color_fondo, padding=20, border_radius=10, content=ft.Column([ft.Row([texto_total], alignment="center"), ft.ElevatedButton("GUARDAR VENTA", icon=ft.icons.SAVE, on_click=confirmar, bgcolor=ft.colors.GREEN, color=ft.colors.WHITE, width=float("inf"), height=50)]))
-                    page.views.append(ft.View("/carrito", [ft.AppBar(title=ft.Text(tit_pantalla), bgcolor=color_fondo, color=ft.colors.WHITE, leading=ft.IconButton(ft.icons.ARROW_BACK, icon_color=ft.colors.WHITE, on_click=lambda _: page.go("/pedidos_dia"))), bloque, lista_carrito_ui, pie], padding=20)); act_carrito()
+                    color_fondo = ft.Colors.BLUE_800 if estado_carrito["editando"] else ft.Colors.BLUE_GREY_900
+                    bloque = ft.Card(content=ft.Container(padding=15, content=ft.Column([ft.Row([dd_clientes, ft.IconButton(icon=ft.Icons.PERSON_ADD, icon_color=ft.Colors.BLUE, on_click=lambda _: setattr(page.dialog, 'open', True) or page.update())]), ft.Text("2. Agregar artículos", weight="bold"), ft.Row([dd_productos, inp_cant]), ft.ElevatedButton("AGREGAR", icon=ft.Icons.ADD, on_click=agregar, width=float("inf"))])))
+                    pie = ft.Container(bgcolor=color_fondo, padding=20, border_radius=10, content=ft.Column([ft.Row([texto_total], alignment="center"), ft.ElevatedButton("GUARDAR VENTA", icon=ft.Icons.SAVE, on_click=confirmar, bgcolor=ft.Colors.GREEN, color=ft.Colors.WHITE, width=float("inf"), height=50)]))
+                    page.views.append(ft.View("/carrito", [ft.AppBar(title=ft.Text(tit_pantalla), bgcolor=color_fondo, color=ft.Colors.WHITE, leading=ft.IconButton(ft.Icons.ARROW_BACK, icon_color=ft.Colors.WHITE, on_click=lambda _: page.go("/pedidos_dia"))), bloque, lista_carrito_ui, pie], padding=20)); act_carrito()
 
                 elif page.route == "/agregar_producto":
                     inp_cod = ft.TextField(label="Código (ART-01)", width=float("inf")); inp_nom = ft.TextField(label="Descripción", width=float("inf")); inp_pre = ft.TextField(label="Precio ($)", keyboard_type="number", width=float("inf"))
@@ -230,14 +231,14 @@ def main(page: ft.Page):
                             if filas:
                                 for c, n, p in filas:
                                     def borrar_p(e, cod=c): ejecutar_db("DELETE FROM Productos WHERE codigo_articulo=?", (cod,)); ref_prod()
-                                    tabla_prod.rows.append(ft.DataRow(cells=[ft.DataCell(ft.Text(str(c))), ft.DataCell(ft.Text(str(n))), ft.DataCell(ft.Text(f"${formato_ars(p)}")), ft.DataCell(ft.IconButton(ft.icons.DELETE, icon_color=ft.colors.RED, on_click=borrar_p))]))
+                                    tabla_prod.rows.append(ft.DataRow(cells=[ft.DataCell(ft.Text(str(c))), ft.DataCell(ft.Text(str(n))), ft.DataCell(ft.Text(f"${formato_ars(p)}")), ft.DataCell(ft.IconButton(ft.Icons.DELETE, icon_color=ft.Colors.RED, on_click=borrar_p))]))
                             tabla_prod.update()
                         except: pass
                     def guardar_p(e):
                         if inp_cod.value and inp_nom.value and inp_pre.value:
                             ejecutar_db("INSERT INTO Productos VALUES (?, ?, ?)", (inp_cod.value.strip().upper(), inp_nom.value.strip().upper(), float(inp_pre.value.replace(',','.'))))
                             inp_cod.value = ""; inp_nom.value = ""; inp_pre.value = ""; ref_prod()
-                    page.views.append(ft.View("/agregar_producto", [ft.AppBar(title=ft.Text("Catálogo"), bgcolor=ft.colors.TEAL_800, color=ft.colors.WHITE, leading=ft.IconButton(ft.icons.ARROW_BACK, icon_color=ft.colors.WHITE, on_click=lambda _: page.go("/"))), inp_cod, inp_nom, inp_pre, ft.ElevatedButton("GUARDAR", icon=ft.icons.SAVE, on_click=guardar_p, style=estilo_btn_secundario, width=float("inf")), ft.Divider(), ft.Column([tabla_prod], scroll="auto", expand=True)], padding=20)); ref_prod()
+                    page.views.append(ft.View("/agregar_producto", [ft.AppBar(title=ft.Text("Catálogo"), bgcolor=ft.Colors.TEAL_800, color=ft.Colors.WHITE, leading=ft.IconButton(ft.Icons.ARROW_BACK, icon_color=ft.Colors.WHITE, on_click=lambda _: page.go("/"))), inp_cod, inp_nom, inp_pre, ft.ElevatedButton("GUARDAR", icon=ft.Icons.SAVE, on_click=guardar_p, style=estilo_btn_secundario, width=float("inf")), ft.Divider(), ft.Column([tabla_prod], scroll="auto", expand=True)], padding=20)); ref_prod()
 
                 elif page.route == "/agregar_cliente":
                     inp_nom_c = ft.TextField(label="Nombre", width=float("inf")); inp_dir_c = ft.TextField(label="Dirección", width=float("inf"))
@@ -249,19 +250,19 @@ def main(page: ft.Page):
                             if filas:
                                 for id_c, n, d in filas:
                                     def borrar_c(e, num=id_c): ejecutar_db("DELETE FROM Clientes WHERE numero_cliente=?", (num,)); ref_cli()
-                                    tabla_cli.rows.append(ft.DataRow(cells=[ft.DataCell(ft.Text(str(id_c))), ft.DataCell(ft.Text(str(n))), ft.DataCell(ft.Text(str(d if d else ""))), ft.DataCell(ft.IconButton(ft.icons.DELETE, icon_color=ft.colors.RED, on_click=borrar_c))]))
+                                    tabla_cli.rows.append(ft.DataRow(cells=[ft.DataCell(ft.Text(str(id_c))), ft.DataCell(ft.Text(str(n))), ft.DataCell(ft.Text(str(d if d else ""))), ft.DataCell(ft.IconButton(ft.Icons.DELETE, icon_color=ft.Colors.RED, on_click=borrar_c))]))
                             tabla_cli.update()
                         except: pass
                     def guardar_c(e):
                         if inp_nom_c.value:
                             ejecutar_db("INSERT INTO Clientes (nombre_apellido, direccion_entrega) VALUES (?, ?)", (inp_nom_c.value.upper(), inp_dir_c.value))
                             inp_nom_c.value = ""; inp_dir_c.value = ""; ref_cli()
-                    page.views.append(ft.View("/agregar_cliente", [ft.AppBar(title=ft.Text("Directorio"), bgcolor=ft.colors.INDIGO_800, color=ft.colors.WHITE, leading=ft.IconButton(ft.icons.ARROW_BACK, icon_color=ft.colors.WHITE, on_click=lambda _: page.go("/"))), inp_nom_c, inp_dir_c, ft.ElevatedButton("GUARDAR", icon=ft.icons.SAVE, on_click=guardar_c, style=estilo_btn_secundario, width=float("inf")), ft.Divider(), ft.Column([tabla_cli], scroll="auto", expand=True)], padding=20)); ref_cli()
+                    page.views.append(ft.View("/agregar_cliente", [ft.AppBar(title=ft.Text("Directorio"), bgcolor=ft.Colors.INDIGO_800, color=ft.Colors.WHITE, leading=ft.IconButton(ft.Icons.ARROW_BACK, icon_color=ft.Colors.WHITE, on_click=lambda _: page.go("/"))), inp_nom_c, inp_dir_c, ft.ElevatedButton("GUARDAR", icon=ft.Icons.SAVE, on_click=guardar_c, style=estilo_btn_secundario, width=float("inf")), ft.Divider(), ft.Column([tabla_cli], scroll="auto", expand=True)], padding=20)); ref_cli()
 
                 elif page.route == "/reportes":
                     page.views.append(ft.View("/reportes", [
-                        ft.AppBar(title=ft.Text("Reportes"), bgcolor=ft.colors.AMBER_800, color=ft.colors.WHITE, leading=ft.IconButton(ft.icons.ARROW_BACK, icon_color=ft.colors.WHITE, on_click=lambda _: page.go("/"))),
-                        ft.Text("Los reportes en PDF estarán disponibles próximamente en la versión móvil.", weight="bold", color=ft.colors.RED)
+                        ft.AppBar(title=ft.Text("Reportes"), bgcolor=ft.Colors.AMBER_800, color=ft.Colors.WHITE, leading=ft.IconButton(ft.Icons.ARROW_BACK, icon_color=ft.Colors.WHITE, on_click=lambda _: page.go("/"))),
+                        ft.Text("Los reportes en PDF estarán disponibles próximamente en la versión móvil.", weight="bold", color=ft.Colors.RED)
                     ], padding=20, scroll="auto"))
 
                 page.update()
@@ -273,9 +274,9 @@ def main(page: ft.Page):
                     ft.View(
                         "/error",
                         [
-                            ft.Text("¡ERROR AL DIBUJAR PANTALLA!", color=ft.colors.WHITE, bgcolor=ft.colors.RED, size=24, weight="bold"),
-                            ft.Text("Sacale captura a esto por favor:", color=ft.colors.BLACK, weight="bold"),
-                            ft.Text(error_pila, color=ft.colors.RED, selectable=True)
+                            ft.Text("¡ERROR AL DIBUJAR PANTALLA!", color=ft.Colors.WHITE, bgcolor=ft.Colors.RED, size=24, weight="bold"),
+                            ft.Text("Sacale captura a esto por favor:", color=ft.Colors.BLACK, weight="bold"),
+                            ft.Text(error_pila, color=ft.Colors.RED, selectable=True)
                         ],
                         padding=20, scroll="auto"
                     )
@@ -289,14 +290,14 @@ def main(page: ft.Page):
         error_pila = traceback.format_exc()
         page.clean()
         page.add(
-            ft.Text("¡CAZAMOS EL ERROR DE ARRANQUE!", color=ft.colors.WHITE, bgcolor=ft.colors.RED, size=24, weight="bold"),
-            ft.Text("Sacale captura a este texto:", color=ft.colors.BLACK, weight="bold"),
-            ft.Text(error_pila, color=ft.colors.RED, selectable=True)
+            ft.Text("¡CAZAMOS EL ERROR DE ARRANQUE!", color=ft.Colors.WHITE, bgcolor=ft.Colors.RED, size=24, weight="bold"),
+            ft.Text("Sacale captura a este texto:", color=ft.Colors.BLACK, weight="bold"),
+            ft.Text(error_pila, color=ft.Colors.RED, selectable=True)
         )
         page.update()
 
 # ==========================================
-# ARRANQUE LIMPIO (SOLO NAVEGADOR)
+# ARRANQUE NATIVO PARA ANDROID/GITHUB
 # ==========================================
 if __name__ == "__main__":
-    ft.app(target=main, view=ft.AppView.WEB_BROWSER)
+    ft.app(target=main)
