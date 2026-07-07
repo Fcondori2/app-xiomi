@@ -4,14 +4,15 @@ import sqlite3
 import traceback
 from datetime import date
 
-# ==========================================
-# 1. HERRAMIENTAS DE BASE DE DATOS (ANDROID SAFE)
-# ==========================================
-def get_ruta_db():
-    return os.path.join(os.environ.get("FLET_APP_STORAGE_DATA", "."), "sistema_ventas.db")
+# Aseguramos que exista la carpeta de descargas temporales en el servidor
+if not os.path.exists("assets"):
+    os.makedirs("assets")
 
+# ==========================================
+# 1. HERRAMIENTAS DE BASE DE DATOS
+# ==========================================
 def db(query, parametros=(), fetch=False, fetchall=False):
-    conexion = sqlite3.connect(get_ruta_db())
+    conexion = sqlite3.connect("sistema_ventas.db")
     cursor = conexion.cursor()
     cursor.execute(query, parametros)
     if fetch:
@@ -33,7 +34,7 @@ def formato_ars(numero):
     return f"{numero:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 # ==========================================
-# 2. MOTORES DE PDF (AISLADOS)
+# 2. MOTOR DE PDF (DESCARGA DIRECTA WEB)
 # ==========================================
 def generar_pdf_facturas(ruta_destino, num_factura=None, fecha_consulta=None):
     from fpdf import FPDF 
@@ -104,7 +105,7 @@ def generar_reporte_generico(ruta_destino, query, parametros, titulo, subtitulo)
     return True
 
 # ==========================================
-# 3. INTERFAZ GRÁFICA PROFESIONAL (FLET)
+# 3. INTERFAZ GRÁFICA WEB
 # ==========================================
 def main(page: ft.Page):
     try:
@@ -114,33 +115,6 @@ def main(page: ft.Page):
         
         carrito = {}
         estado_carrito = {"editando": False, "id_factura": None, "cargado": False}
-        operacion_pdf = {} 
-
-        # --- SISTEMA DE GUARDADO PARA ANDROID (SEPARADO EN 2 PASOS) ---
-        def ejecutar_guardado_pdf(e):
-            if e.path: 
-                exito = False
-                try:
-                    tipo = operacion_pdf.get("tipo")
-                    if tipo == "factura":
-                        exito = generar_pdf_facturas(e.path, num_factura=operacion_pdf.get("id_f"), fecha_consulta=operacion_pdf.get("fecha"))
-                    elif tipo == "reporte_dia":
-                        exito = generar_reporte_generico(e.path, "SELECT d.codigo_articulo, p.nombre_articulo, p.precio_unitario, SUM(d.unidades), SUM(d.total_linea) FROM Detalle_Factura d JOIN Productos p ON d.codigo_articulo = p.codigo_articulo JOIN Facturas f ON d.numero_factura = f.numero_factura WHERE f.fecha = ? GROUP BY d.codigo_articulo", (operacion_pdf.get("fecha"),), "REPORTE DIARIO DE VENTAS", f"Fecha: {operacion_pdf.get('fecha')}")
-                    elif tipo == "consolidado":
-                        exito = generar_reporte_generico(e.path, "SELECT d.codigo_articulo, p.nombre_articulo, p.precio_unitario, SUM(d.unidades), SUM(d.total_linea) FROM Detalle_Factura d JOIN Productos p ON d.codigo_articulo = p.codigo_articulo JOIN Facturas f ON d.numero_factura = f.numero_factura WHERE f.fecha BETWEEN ? AND ? GROUP BY d.codigo_articulo", (operacion_pdf.get("finio"), operacion_pdf.get("ffin")), "REPORTE CONSOLIDADO", f"Periodo: {operacion_pdf.get('finio')} al {operacion_pdf.get('ffin')}")
-                    
-                    if exito:
-                        page.snack_bar = ft.SnackBar(ft.Text(f"✅ ¡PDF Guardado! Ya podés enviarlo por WhatsApp.", color="white"), bgcolor="green")
-                    else:
-                        page.snack_bar = ft.SnackBar(ft.Text("❌ No hay facturas para generar reporte.", color="white"), bgcolor="red")
-                except Exception as ex:
-                    page.snack_bar = ft.SnackBar(ft.Text(f"❌ Error al guardar: {ex}", color="white"), bgcolor="red")
-                page.snack_bar.open = True; page.update()
-
-        # ACÁ ESTÁ EL ARREGLO PARA QUE ANDROID NO CRASHEE:
-        guardar_dialogo = ft.FilePicker()
-        guardar_dialogo.on_result = ejecutar_guardado_pdf
-        page.overlay.append(guardar_dialogo)
 
         def cambiar_pantalla(e):
             try:
@@ -278,6 +252,7 @@ def main(page: ft.Page):
                             inp_nom_c.value = ""; inp_dir_c.value = ""; ref_cli()
                     page.views.append(ft.View("/agregar_cliente", [ft.AppBar(title=ft.Text("Directorio"), bgcolor="#303F9F", color="white", leading=ft.IconButton("arrow_back", icon_color="white", on_click=lambda _: page.go("/"))), inp_nom_c, inp_dir_c, ft.ElevatedButton("GUARDAR", icon="save", on_click=guardar_c, style=ft.ButtonStyle(bgcolor="#303F9F", color="white", padding=20), width=float("inf")), ft.Divider(), ft.Column([tabla_cli], scroll="auto", expand=True)], padding=20)); ref_cli()
 
+                # PANTALLA 6: REPORTES - TOTALMENTE COMPATIBLE CON LA WEB
                 elif page.route == "/reportes":
                     hoy = date.today().strftime("%Y-%m-%d")
                     inp_num = ft.TextField(label="Nro Factura", keyboard_type="number")
@@ -286,9 +261,26 @@ def main(page: ft.Page):
                     inp_fin = ft.TextField(label="Hasta (YYYY-MM-DD)", value=hoy, expand=True)
 
                     def pedir_pdf(tipo, id_f=None, f=None, finio=None, ffin=None):
-                        operacion_pdf.update({"tipo": tipo, "id_f": id_f, "fecha": f, "finio": finio, "ffin": ffin})
-                        nombre = f"Reporte_XIOMI_{tipo}.pdf"
-                        guardar_dialogo.save_file(dialog_title="¿Dónde guardar el PDF?", file_name=nombre, allowed_extensions=["pdf"])
+                        import time
+                        # Se guarda directo en la carpeta "assets" del servidor
+                        nombre_archivo = f"Reporte_{tipo}_{int(time.time())}.pdf"
+                        ruta_completa = os.path.join("assets", nombre_archivo)
+                        
+                        exito = False
+                        if tipo == "factura":
+                            exito = generar_pdf_facturas(ruta_completa, num_factura=id_f, fecha_consulta=f)
+                        elif tipo == "reporte_dia":
+                            exito = generar_reporte_generico(ruta_completa, "SELECT d.codigo_articulo, p.nombre_articulo, p.precio_unitario, SUM(d.unidades), SUM(d.total_linea) FROM Detalle_Factura d JOIN Productos p ON d.codigo_articulo = p.codigo_articulo JOIN Facturas f ON d.numero_factura = f.numero_factura WHERE f.fecha = ? GROUP BY d.codigo_articulo", (f,), "REPORTE DIARIO DE VENTAS", f"Fecha: {f}")
+                        elif tipo == "consolidado":
+                            exito = generar_reporte_generico(ruta_completa, "SELECT d.codigo_articulo, p.nombre_articulo, p.precio_unitario, SUM(d.unidades), SUM(d.total_linea) FROM Detalle_Factura d JOIN Productos p ON d.codigo_articulo = p.codigo_articulo JOIN Facturas f ON d.numero_factura = f.numero_factura WHERE f.fecha BETWEEN ? AND ? GROUP BY d.codigo_articulo", (finio, ffin), "REPORTE CONSOLIDADO", f"Periodo: {finio} al {ffin}")
+                        
+                        if exito:
+                            # LA MAGIA WEB: El navegador del celular descarga el PDF al instante
+                            page.launch_url(f"/{nombre_archivo}")
+                            page.snack_bar = ft.SnackBar(ft.Text("✅ ¡PDF Descargado! Buscalo en las descargas de tu celu.", color="white"), bgcolor="green")
+                        else:
+                            page.snack_bar = ft.SnackBar(ft.Text("❌ No se encontraron datos para generar el PDF.", color="white"), bgcolor="red")
+                        page.snack_bar.open = True; page.update()
 
                     page.views.append(ft.View("/reportes", [
                         ft.AppBar(title=ft.Text("Reportes y Balances"), bgcolor="#FF8F00", color="white", leading=ft.IconButton("arrow_back", icon_color="white", on_click=lambda _: page.go("/"))),
@@ -308,10 +300,7 @@ def main(page: ft.Page):
             except Exception as ex:
                 error_pila = traceback.format_exc()
                 page.clean()  
-                page.add(
-                    ft.Text("¡ERROR AL DIBUJAR PANTALLA!", color="white", bgcolor="red", size=24, weight="bold"),
-                    ft.Text(error_pila, color="red", selectable=True)
-                )
+                page.add(ft.Text("¡ERROR GRÁFICO!", color="white", bgcolor="red", size=24, weight="bold"), ft.Text(error_pila, color="red"))
                 page.update()
 
         page.on_route_change = cambiar_pantalla
@@ -320,11 +309,12 @@ def main(page: ft.Page):
     except Exception as e:
         error_pila = traceback.format_exc()
         page.clean() 
-        page.add(
-            ft.Text("¡CAZAMOS UN ERROR DE ARRANQUE!", color="white", bgcolor="red", size=24, weight="bold"),
-            ft.Text(error_pila, color="red", selectable=True)
-        )
+        page.add(ft.Text("¡ERROR DE ARRANQUE!", color="white", bgcolor="red", size=24, weight="bold"), ft.Text(error_pila, color="red"))
         page.update()
 
+# ==========================================
+# CONFIGURACIÓN DINÁMICA DE PUERTOS PARA LA NUBE
+# ==========================================
 if __name__ == "__main__":
-    ft.app(target=main)
+    puerto_servidor = int(os.environ.get("PORT", 8080))
+    ft.app(target=main, host="0.0.0.0", port=puerto_servidor, assets_dir="assets")
